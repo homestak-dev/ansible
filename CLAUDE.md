@@ -1,4 +1,4 @@
-# Proxmox Setup - Ansible Configuration for Proxmox
+# Ansible - Ansible Configuration for Proxmox
 
 Ansible playbooks for configuring fresh Proxmox VE installations and installing PVE on Debian.
 
@@ -23,7 +23,7 @@ ansible-playbook -i inventory/local.yml playbooks/user.yml
 ## Project Structure
 
 ```
-proxmox-setup/
+ansible/
 ├── install.sh            # curl|bash entry point
 ├── bootstrap.sh          # Pre-ansible system prep
 ├── ansible.cfg           # Ansible configuration
@@ -54,13 +54,13 @@ proxmox-setup/
 
 ### curl|bash (fresh Proxmox)
 ```bash
-curl -fsSL https://raw.githubusercontent.com/JDeRose-net/proxmox-setup/master/install.sh | NEWUSER=sysadm bash
+curl -fsSL https://raw.githubusercontent.com/JDeRose-net/ansible/master/install.sh | NEWUSER=sysadm bash
 ```
 
 ### Manual
 ```bash
-git clone https://github.com/JDeRose-net/proxmox-setup.git /opt/proxmox-setup
-cd /opt/proxmox-setup
+git clone https://github.com/JDeRose-net/ansible.git /opt/ansible
+cd /opt/ansible
 ./bootstrap.sh
 ansible-playbook -i inventory/local.yml playbooks/site.yml
 ```
@@ -78,7 +78,7 @@ ansible-playbook -i inventory/local.yml playbooks/site.yml
 
 ```
 /root/
-├── proxmox-setup/    # This project - Ansible configuration
+├── ansible/    # This project - Ansible configuration
 └── tofu/             # VM provisioning with OpenTofu
     └── envs/pve-test/  # Test env for pve-install playbook
 ```
@@ -110,5 +110,5 @@ Creates non-privileged sudoer user (local_user variable).
 
 ## GitHub Repository
 
-- Public: https://github.com/JDeRose-net/proxmox-setup
+- Public: https://github.com/JDeRose-net/ansible
 - For curl|bash installation support

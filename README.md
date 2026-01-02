@@ -5,13 +5,13 @@ Ansible playbooks for configuring fresh Proxmox installations (PVE, PBS, PMG).
 ## Quick Install
 
 ```bash
-curl -sSL https://raw.githubusercontent.com/JDeRose-net/proxmox-setup/master/install.sh | bash
+curl -sSL https://raw.githubusercontent.com/JDeRose-net/ansible/master/install.sh | bash
 ```
 
 Custom username (default: `sysadm`):
 
 ```bash
-curl -sSL https://raw.githubusercontent.com/JDeRose-net/proxmox-setup/master/install.sh | NEWUSER=myuser bash
+curl -sSL https://raw.githubusercontent.com/JDeRose-net/ansible/master/install.sh | NEWUSER=myuser bash
 ```
 
 ## After Install
@@ -19,7 +19,7 @@ curl -sSL https://raw.githubusercontent.com/JDeRose-net/proxmox-setup/master/ins
 As root:
 
 ```bash
-cd /opt/proxmox-setup
+cd /opt/ansible
 ansible-playbook -i inventory/local.yml playbooks/site.yml -e local_user=sysadm
 passwd sysadm
 ```

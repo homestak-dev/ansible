@@ -3,21 +3,21 @@
 # Proxmox Post-Install Setup
 #
 # Usage:
-#   curl -sSL https://raw.githubusercontent.com/JDeRose-net/proxmox-setup/master/install.sh | bash
+#   curl -sSL https://raw.githubusercontent.com/JDeRose-net/ansible/master/install.sh | bash
 #
 # Custom username:
-#   curl -sSL https://raw.githubusercontent.com/JDeRose-net/proxmox-setup/master/install.sh | NEWUSER=myuser bash
+#   curl -sSL https://raw.githubusercontent.com/JDeRose-net/ansible/master/install.sh | NEWUSER=myuser bash
 #
 set -euo pipefail
 
-REPO_URL="https://github.com/JDeRose-net/proxmox-setup.git"
-INSTALL_DIR="/opt/proxmox-setup"
+REPO_URL="https://github.com/JDeRose-net/ansible.git"
+INSTALL_DIR="/opt/ansible"
 NEWUSER="${NEWUSER:-sysadm}"
 
 # Must run as root
 if [[ $EUID -ne 0 ]]; then
     echo "Error: This script must be run as root"
-    echo "Usage: curl -sSL https://raw.githubusercontent.com/JDeRose-net/proxmox-setup/master/install.sh | sudo bash"
+    echo "Usage: curl -sSL https://raw.githubusercontent.com/JDeRose-net/ansible/master/install.sh | sudo bash"
     exit 1
 fi
 
