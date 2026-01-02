@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# Proxmox PVE Installer
+# Proxmox PVE Post-Install Setup
 #
 # Usage:
 #   curl -sSL https://raw.githubusercontent.com/john-derose/proxmox-pve/master/install.sh | bash
@@ -21,7 +21,7 @@ if [[ $EUID -ne 0 ]]; then
     exit 1
 fi
 
-echo "==> Proxmox PVE Installer"
+echo "==> Proxmox PVE Post-Install Setup"
 echo "==> Target user: $NEWUSER"
 
 # Install git if not present

@@ -33,7 +33,7 @@ if [[ $EUID -ne 0 ]]; then
     exit 1
 fi
 
-echo "==> Proxmox PVE Bootstrap"
+echo "==> Proxmox PVE Post-Install Setup"
 echo "==> Target user: $USERNAME"
 
 # Create local user if not exists
