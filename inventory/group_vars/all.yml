@@ -2,7 +2,7 @@
 # Common variables for all environments
 
 # User configuration
-local_user: sysadm
+local_user: "{{ ansible_user_id }}"
 local_user_shell: /bin/bash
 
 # Timezone

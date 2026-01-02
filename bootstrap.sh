@@ -85,9 +85,5 @@ echo "Next steps:"
 echo "  passwd $USERNAME"
 echo "  su - $USERNAME"
 echo "  cd /opt/proxmox-pve"
-if [[ "$USERNAME" == "$DEFAULT_USER" ]]; then
-    echo "  ansible-playbook -i inventory/local.yml playbooks/site.yml"
-else
-    echo "  ansible-playbook -i inventory/local.yml playbooks/site.yml -e local_user=$USERNAME"
-fi
+echo "  ansible-playbook -i inventory/local.yml playbooks/site.yml"
 echo ""
