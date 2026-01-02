@@ -24,6 +24,23 @@ fi
 echo "==> Proxmox PVE Post-Install Setup"
 echo "==> Target user: $NEWUSER"
 
+# Disable enterprise repos (they block apt update without subscription)
+echo "==> Configuring repositories..."
+for repo in /etc/apt/sources.list.d/{pve-enterprise.sources,ceph.sources}; do
+    if [[ -f "$repo" ]]; then
+        mv "$repo" "${repo}.disabled"
+        echo "    Disabled: $repo"
+    fi
+done
+
+# Add no-subscription repo if not present
+NOSUB_REPO="/etc/apt/sources.list.d/pve-no-subscription.list"
+if [[ ! -f "$NOSUB_REPO" ]]; then
+    CODENAME=$(grep VERSION_CODENAME /etc/os-release | cut -d= -f2)
+    echo "deb http://download.proxmox.com/debian/pve ${CODENAME} pve-no-subscription" > "$NOSUB_REPO"
+    echo "    Added: pve-no-subscription repo"
+fi
+
 # Install git if not present
 if ! command -v git &>/dev/null; then
     echo "==> Installing git..."
