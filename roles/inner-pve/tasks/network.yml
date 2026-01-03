@@ -1,58 +1,70 @@
 ---
 # Network bridge setup for inner PVE
-
-- name: Get primary network interface
-  ansible.builtin.shell: |
-    set -o pipefail
-    ip route | grep default | awk '{print $5}' | head -1
-  args:
-    executable: /bin/bash
-  register: primary_iface_result
-  changed_when: false
-
-- name: Set primary interface fact
-  ansible.builtin.set_fact:
-    primary_iface: "{{ inner_pve_bridge_port | default(primary_iface_result.stdout | trim) }}"
-
-- name: Get current IP address
-  ansible.builtin.shell: |
-    set -o pipefail
-    ip -4 addr show {{ primary_iface }} | grep 'inet ' | awk '{print $2}' | head -1
-  args:
-    executable: /bin/bash
-  register: current_ip_result
-  changed_when: false
-
-- name: Get current gateway
-  ansible.builtin.shell: |
-    set -o pipefail
-    ip route | grep default | awk '{print $3}' | head -1
-  args:
-    executable: /bin/bash
-  register: current_gw_result
-  changed_when: false
-
-- name: Display detected network config
-  ansible.builtin.debug:
-    msg: "Interface: {{ primary_iface }}, IP: {{ current_ip_result.stdout | trim }}, Gateway: {{ current_gw_result.stdout | trim }}"
+# Uses Ansible facts for reliable network detection
 
 - name: Check if vmbr0 already exists
-  ansible.builtin.shell: ip link show vmbr0
+  ansible.builtin.shell: ip link show vmbr0 2>/dev/null && ip addr show vmbr0 | grep -q 'inet '
   register: vmbr0_check
   failed_when: false
   changed_when: false
 
-- name: Create vmbr0 bridge configuration
-  ansible.builtin.template:
-    src: interfaces.j2
-    dest: /etc/network/interfaces
-    backup: true
-  vars:
-    bridge_address: "{{ current_ip_result.stdout | trim }}"
-    bridge_gateway: "{{ current_gw_result.stdout | trim }}"
-    bridge_port: "{{ primary_iface | trim }}"
-  when: vmbr0_check.rc != 0
-  notify: Apply network configuration
+- name: Skip network setup if vmbr0 already configured
+  ansible.builtin.debug:
+    msg: "vmbr0 bridge already exists and has IP - skipping network configuration"
+  when: vmbr0_check.rc == 0
 
-- name: Flush handlers to apply network now
-  ansible.builtin.meta: flush_handlers
+- name: Configure vmbr0 bridge
+  when: vmbr0_check.rc != 0
+  block:
+    - name: Set network facts from Ansible gathered facts
+      ansible.builtin.set_fact:
+        detected_iface: "{{ ansible_default_ipv4.interface | default('') }}"
+        detected_address: "{{ ansible_default_ipv4.address | default('') }}"
+        detected_netmask: "{{ ansible_default_ipv4.netmask | default('') }}"
+        detected_gateway: "{{ ansible_default_ipv4.gateway | default('') }}"
+
+    - name: Override with explicit variables if provided
+      ansible.builtin.set_fact:
+        bridge_port: "{{ inner_pve_bridge_port | default(detected_iface) }}"
+        bridge_mode: "{{ inner_pve_bridge_mode | default('dhcp') }}"
+        bridge_address: "{{ inner_pve_bridge_address | default(detected_address) }}"
+        bridge_netmask: "{{ inner_pve_bridge_netmask | default(detected_netmask) }}"
+        bridge_gateway: "{{ inner_pve_bridge_gateway | default(detected_gateway) }}"
+
+    - name: Display detected network config
+      ansible.builtin.debug:
+        msg: |
+          Bridge port: {{ bridge_port }}
+          Mode: {{ bridge_mode }}
+          Address: {{ bridge_address }}/{{ bridge_netmask }}
+          Gateway: {{ bridge_gateway }}
+
+    - name: Validate network detection
+      ansible.builtin.assert:
+        that:
+          - bridge_port | length > 0
+          - bridge_port != 'lo'
+          - bridge_port != 'vmbr0'
+          - bridge_mode == 'dhcp' or (bridge_address | length > 0 and bridge_gateway | length > 0)
+        fail_msg: |
+          Network detection failed!
+          Interface: {{ bridge_port }}
+          Address: {{ bridge_address }}
+          Gateway: {{ bridge_gateway }}
+
+          Please specify manually:
+            inner_pve_bridge_port: eth0
+            inner_pve_bridge_mode: dhcp  # or 'static'
+            inner_pve_bridge_address: 10.0.12.x  # if static
+            inner_pve_bridge_netmask: 255.255.255.0  # if static
+            inner_pve_bridge_gateway: 10.0.12.1  # if static
+
+    - name: Create vmbr0 bridge configuration
+      ansible.builtin.template:
+        src: interfaces.j2
+        dest: /etc/network/interfaces
+        backup: true
+      notify: Apply network configuration
+
+    - name: Flush handlers to apply network now
+      ansible.builtin.meta: flush_handlers

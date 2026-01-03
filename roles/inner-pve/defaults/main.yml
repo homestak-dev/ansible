@@ -1,8 +1,19 @@
 ---
 # Inner PVE setup defaults
 
-# Network bridge interface (auto-detected if not set)
+# Network bridge configuration
+# All values auto-detected from ansible_default_ipv4 facts if not set
+
+# Physical interface to bridge (e.g., eth0, ens18)
 inner_pve_bridge_port: null
+
+# Bridge IP mode: 'dhcp' or 'static'
+inner_pve_bridge_mode: dhcp
+
+# Static IP settings (only used if bridge_mode == 'static')
+inner_pve_bridge_address: null
+inner_pve_bridge_netmask: null
+inner_pve_bridge_gateway: null
 
 # Packer source directory on controller
 packer_src_dir: /root/homestak/packer

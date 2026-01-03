@@ -10,9 +10,17 @@ iface {{ bridge_port }} inet manual
 
 # VM bridge
 auto vmbr0
+{% if bridge_mode == 'dhcp' %}
+iface vmbr0 inet dhcp
+    bridge-ports {{ bridge_port }}
+    bridge-stp off
+    bridge-fd 0
+{% else %}
 iface vmbr0 inet static
     address {{ bridge_address }}
+    netmask {{ bridge_netmask }}
     gateway {{ bridge_gateway }}
     bridge-ports {{ bridge_port }}
     bridge-stp off
     bridge-fd 0
+{% endif %}
