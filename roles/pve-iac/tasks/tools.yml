@@ -1,5 +1,5 @@
 ---
-# Install packer and tofu on inner PVE
+# Install packer and tofu on Proxmox VE
 
 - name: Install prerequisites
   ansible.builtin.apt:

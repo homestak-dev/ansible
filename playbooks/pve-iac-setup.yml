@@ -1,0 +1,40 @@
+---
+# Install IaC tools (packer, tofu) on Proxmox VE
+#
+# Usage:
+#   ansible-playbook -i inventory/remote-dev.yml playbooks/pve-iac-setup.yml \
+#     -e ansible_host=<IP>
+#
+# This playbook installs:
+#   - Packer (HashiCorp)
+#   - OpenTofu
+#   - Creates API token for tofu
+
+- name: Install IaC tools on Proxmox VE
+  hosts: all
+  gather_facts: true
+  become: true
+
+  pre_tasks:
+    - name: Display target
+      ansible.builtin.debug:
+        msg: "Installing IaC tools on {{ ansible_host }}"
+
+  roles:
+    - pve-iac
+
+  post_tasks:
+    - name: Display completion message
+      ansible.builtin.debug:
+        msg: |
+          IaC tools installed on {{ ansible_host }}!
+
+          Installed:
+          - packer: $(packer --version)
+          - tofu: $(tofu --version | head -1)
+          - API token: root@pam!tofu
+
+          Next steps:
+          1. Copy your tofu environments to the host
+          2. Create terraform.tfvars with API token
+          3. Run tofu init && tofu apply

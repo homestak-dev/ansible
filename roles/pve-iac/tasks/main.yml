@@ -1,0 +1,8 @@
+---
+# pve-iac - Install IaC tools (packer, tofu) on Proxmox VE
+
+- name: Include tools installation tasks
+  ansible.builtin.include_tasks: tools.yml
+
+- name: Include API token creation tasks
+  ansible.builtin.include_tasks: api-token.yml

@@ -1,0 +1,36 @@
+---
+# Configure nested PVE for E2E testing
+#
+# Usage:
+#   ansible-playbook -i inventory/remote-dev.yml playbooks/nested-pve-setup.yml \
+#     -e ansible_host=<IP> -e root_password_hash='$6$...'
+#
+# This playbook:
+#   1. Installs IaC tools (packer, tofu) via pve-iac role
+#   2. Configures vmbr0 bridge (required after Debian-to-PVE conversion)
+#   3. Copies SSH keys for nested VM access
+#   4. Copies packer templates and tofu environments
+#   5. Generates terraform.tfvars for test environment
+
+- name: Configure nested PVE
+  hosts: all
+  gather_facts: true
+  become: true
+
+  pre_tasks:
+    - name: Display target
+      ansible.builtin.debug:
+        msg: "Configuring nested PVE at {{ ansible_host }}"
+
+  roles:
+    - nested-pve
+
+  post_tasks:
+    - name: Display completion message
+      ansible.builtin.debug:
+        msg: |
+          Nested PVE configuration complete!
+
+          Next steps:
+          1. Build packer image: ssh root@{{ ansible_host }} "cd /root/packer && packer build -force templates/debian-12-custom.pkr.hcl && ./publish.sh"
+          2. Provision test VM: ssh root@{{ ansible_host }} "cd /root/tofu/envs/test && tofu init && tofu apply"

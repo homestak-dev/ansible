@@ -1,6 +1,6 @@
 ---
-# Network bridge setup for inner PVE
-# Uses Ansible facts for reliable network detection
+# Network bridge setup for nested PVE
+# Creates vmbr0 bridge (required after Debian-to-PVE conversion)
 
 - name: Check if vmbr0 already exists
   ansible.builtin.shell: ip link show vmbr0 2>/dev/null && ip addr show vmbr0 | grep -q 'inet '
@@ -43,11 +43,11 @@
 
     - name: Override with explicit variables if provided
       ansible.builtin.set_fact:
-        bridge_port: "{{ inner_pve_bridge_port | default(detected_iface, true) }}"
-        bridge_mode: "{{ inner_pve_bridge_mode | default('dhcp') }}"
-        bridge_address: "{{ inner_pve_bridge_address | default(detected_address, true) }}"
-        bridge_netmask: "{{ inner_pve_bridge_netmask | default(detected_netmask, true) }}"
-        bridge_gateway: "{{ inner_pve_bridge_gateway | default(detected_gateway, true) }}"
+        bridge_port: "{{ nested_pve_bridge_port | default(detected_iface, true) }}"
+        bridge_mode: "{{ nested_pve_bridge_mode | default('dhcp') }}"
+        bridge_address: "{{ nested_pve_bridge_address | default(detected_address, true) }}"
+        bridge_netmask: "{{ nested_pve_bridge_netmask | default(detected_netmask, true) }}"
+        bridge_gateway: "{{ nested_pve_bridge_gateway | default(detected_gateway, true) }}"
 
     - name: Display detected network config
       ansible.builtin.debug:
@@ -71,11 +71,11 @@
           Gateway: {{ bridge_gateway }}
 
           Please specify manually:
-            inner_pve_bridge_port: eth0
-            inner_pve_bridge_mode: dhcp  # or 'static'
-            inner_pve_bridge_address: 10.0.12.x  # if static
-            inner_pve_bridge_netmask: 255.255.255.0  # if static
-            inner_pve_bridge_gateway: 10.0.12.1  # if static
+            nested_pve_bridge_port: eth0
+            nested_pve_bridge_mode: dhcp  # or 'static'
+            nested_pve_bridge_address: 10.0.12.x  # if static
+            nested_pve_bridge_netmask: 255.255.255.0  # if static
+            nested_pve_bridge_gateway: 10.0.12.1  # if static
 
     - name: Create vmbr0 bridge configuration
       ansible.builtin.template:

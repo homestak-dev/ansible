@@ -1,0 +1,5 @@
+---
+# nested-pve role metadata
+
+dependencies:
+  - role: pve-iac

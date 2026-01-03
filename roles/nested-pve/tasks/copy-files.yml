@@ -1,5 +1,5 @@
 ---
-# Copy packer and tofu files to inner PVE
+# Copy packer and tofu files to nested PVE
 
 # Packer files
 - name: Create packer directory structure
@@ -70,9 +70,9 @@
       - "--exclude=*.tfvars"
       - "--exclude=.terraform.lock.hcl"
 
-- name: Generate terraform.tfvars for inner-test
+- name: Generate terraform.tfvars for test environment
   ansible.builtin.template:
     src: terraform.tfvars.j2
-    dest: /root/tofu/envs/inner-test/terraform.tfvars
+    dest: /root/tofu/envs/test/terraform.tfvars
     mode: '0600'
-  when: inner_pve_api_token is defined
+  when: pve_api_token is defined

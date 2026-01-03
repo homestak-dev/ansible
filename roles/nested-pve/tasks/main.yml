@@ -1,14 +1,9 @@
 ---
-# Inner PVE setup - main task file
+# nested-pve - Setup for nested PVE E2E testing
+# Configures vmbr0 bridge, copies SSH keys and IaC files
 
 - name: Include network setup tasks
   ansible.builtin.include_tasks: network.yml
-
-- name: Include tools installation tasks
-  ansible.builtin.include_tasks: tools.yml
-
-- name: Include API token creation tasks
-  ansible.builtin.include_tasks: api-token.yml
 
 - name: Include SSH key copy tasks
   ansible.builtin.include_tasks: ssh-keys.yml

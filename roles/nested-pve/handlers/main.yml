@@ -1,5 +1,5 @@
 ---
-# Handlers for inner-pve role
+# Handlers for nested-pve role
 
 - name: Apply network configuration
   ansible.builtin.shell: |
