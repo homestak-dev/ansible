@@ -114,6 +114,52 @@
     path: /etc/apt/sources.list.d/pve-install-repo.sources
     state: absent
 
+- name: Remove enterprise repository (requires subscription)
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: absent
+  loop:
+    - /etc/apt/sources.list.d/pve-enterprise.sources
+    - /etc/apt/sources.list.d/pve-enterprise.list
+
+- name: Add PVE no-subscription repository
+  ansible.builtin.copy:
+    dest: /etc/apt/sources.list.d/pve-no-subscription.list
+    content: |
+      # Proxmox VE no-subscription repository
+      deb http://download.proxmox.com/debian/pve {{ ansible_distribution_release }} pve-no-subscription
+    mode: "0644"
+
+- name: Fix cloud-init mirror sources (Debian 13)
+  when: ansible_distribution_release == 'trixie'
+  block:
+    - name: Check for cloud-init mirror-style sources
+      ansible.builtin.stat:
+        path: /etc/apt/mirrors/debian.list
+      register: cloud_init_mirrors
+
+    - name: Replace cloud-init sources with direct URLs
+      ansible.builtin.copy:
+        dest: /etc/apt/sources.list.d/debian.sources
+        content: |
+          Types: deb
+          URIs: https://deb.debian.org/debian
+          Suites: trixie trixie-updates trixie-backports
+          Components: main non-free-firmware
+          Signed-By: /usr/share/keyrings/debian-archive-keyring.gpg
+
+          Types: deb
+          URIs: https://security.debian.org/debian-security
+          Suites: trixie-security
+          Components: main non-free-firmware
+          Signed-By: /usr/share/keyrings/debian-archive-keyring.gpg
+        mode: "0644"
+      when: cloud_init_mirrors.stat.exists
+
+- name: Update apt cache with new repositories
+  ansible.builtin.apt:
+    update_cache: true
+
 - name: Display completion message
   ansible.builtin.debug:
     msg: |
