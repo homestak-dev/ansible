@@ -80,14 +80,14 @@ ansible-playbook -i inventory/local.yml playbooks/site.yml
 
 ## Related Projects
 
+Sibling repositories (same parent directory):
+
 ```
-/root/homestak/
-├── ansible/          # This project - Ansible configuration
+<parent>/
+├── ansible/          # This project
+├── iac-driver/       # E2E test orchestration
 ├── packer/           # Custom cloud images
-├── scripts/          # E2E test helpers (generate-test-summary.sh)
-├── test-runs/        # Generated test reports
 └── tofu/             # VM provisioning with OpenTofu
-    └── envs/pve-deb/ # Debian 13 VM for E2E testing
 ```
 
 ## Playbook Details
