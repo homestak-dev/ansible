@@ -77,8 +77,9 @@ ansible-playbook -i inventory/local.yml playbooks/site.yml
 ## Related Projects
 
 ```
-/root/
-├── ansible/    # This project - Ansible configuration
+/root/homestak/
+├── ansible/          # This project - Ansible configuration
+├── packer/           # Custom cloud images
 └── tofu/             # VM provisioning with OpenTofu
     └── envs/pve-test/  # Test env for pve-install playbook
 ```
