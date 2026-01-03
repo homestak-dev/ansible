@@ -1,0 +1,57 @@
+---
+# Install packer and tofu on inner PVE
+
+- name: Install prerequisites
+  ansible.builtin.apt:
+    name:
+      - curl
+      - gnupg
+      - rsync
+      - jq
+    state: present
+    update_cache: true
+
+# Packer installation
+- name: Add HashiCorp GPG key
+  ansible.builtin.shell: |
+    curl -fsSL https://apt.releases.hashicorp.com/gpg | gpg --dearmor -o /usr/share/keyrings/hashicorp-archive-keyring.gpg
+  args:
+    creates: /usr/share/keyrings/hashicorp-archive-keyring.gpg
+
+- name: Add HashiCorp repository
+  ansible.builtin.apt_repository:
+    repo: "deb [signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com {{ ansible_distribution_release }} main"
+    state: present
+    filename: hashicorp
+
+- name: Install packer
+  ansible.builtin.apt:
+    name: packer
+    state: present
+    update_cache: true
+
+# OpenTofu installation
+- name: Create keyrings directory
+  ansible.builtin.file:
+    path: /etc/apt/keyrings
+    state: directory
+    mode: '0755'
+
+- name: Add OpenTofu GPG key
+  ansible.builtin.shell: |
+    curl -fsSL https://get.opentofu.org/opentofu.gpg | tee /etc/apt/keyrings/opentofu.gpg > /dev/null
+    curl -fsSL https://packages.opentofu.org/opentofu/tofu/gpgkey | gpg --no-tty --batch --dearmor -o /etc/apt/keyrings/opentofu-repo.gpg 2>/dev/null || true
+  args:
+    creates: /etc/apt/keyrings/opentofu.gpg
+
+- name: Add OpenTofu repository
+  ansible.builtin.apt_repository:
+    repo: "deb [signed-by=/etc/apt/keyrings/opentofu.gpg,/etc/apt/keyrings/opentofu-repo.gpg] https://packages.opentofu.org/opentofu/tofu/any/ any main"
+    state: present
+    filename: opentofu
+
+- name: Install tofu
+  ansible.builtin.apt:
+    name: tofu
+    state: present
+    update_cache: true

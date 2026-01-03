@@ -1,0 +1,14 @@
+---
+# Inner PVE setup defaults
+
+# Network bridge interface (auto-detected if not set)
+inner_pve_bridge_port: null
+
+# Packer source directory on controller
+packer_src_dir: /root/homestak/packer
+
+# Tofu source directory on controller
+tofu_src_dir: /root/homestak/tofu
+
+# Root password hash for test VMs
+root_password_hash: "{{ lookup('env', 'ROOT_PASSWORD_HASH') | default('') }}"
