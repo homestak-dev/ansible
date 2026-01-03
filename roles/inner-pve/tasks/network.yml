@@ -23,13 +23,31 @@
         detected_netmask: "{{ ansible_default_ipv4.netmask | default('') }}"
         detected_gateway: "{{ ansible_default_ipv4.gateway | default('') }}"
 
+    - name: Fallback interface detection via shell
+      when: detected_iface == ''
+      block:
+        - name: Get primary interface from ip route
+          ansible.builtin.shell: |
+            set -o pipefail
+            ip -o route get 8.8.8.8 2>/dev/null | grep -oP 'dev \K\S+'
+          args:
+            executable: /bin/bash
+          register: shell_iface
+          changed_when: false
+          failed_when: false
+
+        - name: Set detected interface from shell
+          ansible.builtin.set_fact:
+            detected_iface: "{{ shell_iface.stdout | trim }}"
+          when: shell_iface.stdout | trim | length > 0
+
     - name: Override with explicit variables if provided
       ansible.builtin.set_fact:
-        bridge_port: "{{ inner_pve_bridge_port | default(detected_iface) }}"
+        bridge_port: "{{ inner_pve_bridge_port | default(detected_iface, true) }}"
         bridge_mode: "{{ inner_pve_bridge_mode | default('dhcp') }}"
-        bridge_address: "{{ inner_pve_bridge_address | default(detected_address) }}"
-        bridge_netmask: "{{ inner_pve_bridge_netmask | default(detected_netmask) }}"
-        bridge_gateway: "{{ inner_pve_bridge_gateway | default(detected_gateway) }}"
+        bridge_address: "{{ inner_pve_bridge_address | default(detected_address, true) }}"
+        bridge_netmask: "{{ inner_pve_bridge_netmask | default(detected_netmask, true) }}"
+        bridge_gateway: "{{ inner_pve_bridge_gateway | default(detected_gateway, true) }}"
 
     - name: Display detected network config
       ansible.builtin.debug:
@@ -42,10 +60,10 @@
     - name: Validate network detection
       ansible.builtin.assert:
         that:
-          - bridge_port | length > 0
-          - bridge_port != 'lo'
-          - bridge_port != 'vmbr0'
-          - bridge_mode == 'dhcp' or (bridge_address | length > 0 and bridge_gateway | length > 0)
+          - bridge_port is defined
+          - bridge_port | default('', true) | string | length > 0
+          - bridge_port not in ['lo', 'vmbr0']
+          - bridge_mode == 'dhcp' or (bridge_address | default('', true) | string | length > 0 and bridge_gateway | default('', true) | string | length > 0)
         fail_msg: |
           Network detection failed!
           Interface: {{ bridge_port }}
