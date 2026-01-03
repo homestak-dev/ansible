@@ -41,13 +41,17 @@ ansible/
 │   ├── site.yml          # Full setup (pve-setup + user)
 │   ├── pve-setup.yml     # Core PVE config
 │   ├── pve-install.yml   # Install PVE on Debian 13 Trixie
+│   ├── pve-iac-setup.yml # Install IaC tools (packer, tofu)
+│   ├── nested-pve-setup.yml  # E2E test: configure inner PVE
 │   └── user.yml          # User management only
 └── roles/
     ├── base/             # System packages, timezone, locale
     ├── users/            # Create local_user with sudo
     ├── security/         # SSH hardening, fail2ban (prod)
     ├── proxmox/          # PVE-specific config (repos, certs)
-    └── pve-install/      # Install PVE on Debian 13
+    ├── pve-install/      # Install PVE on Debian 13
+    ├── pve-iac/          # Generic: install packer, tofu, API token
+    └── nested-pve/       # E2E: network bridge, SSH keys, copy files
 ```
 
 ## Installation Methods
@@ -80,8 +84,10 @@ ansible-playbook -i inventory/local.yml playbooks/site.yml
 /root/homestak/
 ├── ansible/          # This project - Ansible configuration
 ├── packer/           # Custom cloud images
+├── scripts/          # E2E test helpers (generate-test-summary.sh)
+├── test-runs/        # Generated test reports
 └── tofu/             # VM provisioning with OpenTofu
-    └── envs/pve-test/  # Test env for pve-install playbook
+    └── envs/pve-deb/ # Debian 13 VM for E2E testing
 ```
 
 ## Playbook Details
@@ -108,6 +114,42 @@ Post-install configuration for existing PVE hosts:
 
 ### user.yml
 Creates non-privileged sudoer user (local_user variable).
+
+## E2E Testing Roles
+
+### pve-iac (Generic IaC Tooling)
+
+Installs infrastructure-as-code tools on any Proxmox host. Reusable for dev, k8s, or other deployments.
+
+**Tasks:**
+- `tools.yml` - Install packer and tofu from official repos
+- `api-token.yml` - Create `root@pam!tofu` API token
+
+**Usage:**
+```bash
+ansible-playbook -i inventory/remote-dev.yml playbooks/pve-iac-setup.yml \
+  -e ansible_host=<IP>
+```
+
+### nested-pve (E2E Test Configuration)
+
+Configures an inner PVE for nested VM testing. Depends on `pve-iac` role.
+
+**Tasks:**
+- `network.yml` - Configure vmbr0 bridge (required after Debian→PVE conversion)
+- `ssh-keys.yml` - Copy SSH keys for nested VM access
+- `copy-files.yml` - Deploy packer templates, tofu environments, generate tfvars
+
+**Usage:**
+```bash
+ansible-playbook -i inventory/remote-dev.yml playbooks/nested-pve-setup.yml \
+  -e ansible_host=<IP>
+```
+
+**Generated files on inner PVE:**
+- `/root/packer/` - Packer templates and scripts
+- `/root/tofu/` - Tofu modules and environments
+- `/root/tofu/envs/test/terraform.tfvars` - Auto-generated with API token
 
 ## GitHub Repository
 
