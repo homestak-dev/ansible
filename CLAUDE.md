@@ -58,12 +58,12 @@ ansible/
 
 ### curl|bash (fresh Proxmox)
 ```bash
-curl -fsSL https://raw.githubusercontent.com/JDeRose-net/ansible/master/install.sh | NEWUSER=sysadm bash
+curl -fsSL https://raw.githubusercontent.com/homestak-dev/ansible/master/install.sh | NEWUSER=sysadm bash
 ```
 
 ### Manual
 ```bash
-git clone https://github.com/JDeRose-net/ansible.git /opt/ansible
+git clone https://github.com/homestak-dev/ansible.git /opt/ansible
 cd /opt/ansible
 ./bootstrap.sh
 ansible-playbook -i inventory/local.yml playbooks/site.yml
@@ -80,15 +80,14 @@ ansible-playbook -i inventory/local.yml playbooks/site.yml
 
 ## Related Projects
 
-Sibling repositories (same parent directory):
+Part of the [homestak-dev](https://github.com/homestak-dev) organization:
 
-```
-<parent>/
-├── ansible/          # This project
-├── iac-driver/       # E2E test orchestration
-├── packer/           # Custom cloud images
-└── tofu/             # VM provisioning with OpenTofu
-```
+| Repo | Purpose |
+|------|---------|
+| [ansible](https://github.com/homestak-dev/ansible) | This project - Proxmox configuration |
+| [iac-driver](https://github.com/homestak-dev/iac-driver) | E2E test orchestration |
+| [packer](https://github.com/homestak-dev/packer) | Custom Debian cloud images |
+| [tofu](https://github.com/homestak-dev/tofu) | VM provisioning with OpenTofu |
 
 ## Playbook Details
 
@@ -126,5 +125,8 @@ See `../iac-driver/CLAUDE.md` for full E2E procedure and architecture.
 
 ## GitHub Repository
 
-- Public: https://github.com/JDeRose-net/ansible
-- For curl|bash installation support
+- https://github.com/homestak-dev/ansible
+
+## License
+
+Apache 2.0 - see [LICENSE](LICENSE)

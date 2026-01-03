@@ -1,17 +1,19 @@
-# Proxmox Post-Install Setup
+# ansible
 
-Ansible playbooks for configuring fresh Proxmox installations (PVE, PBS, PMG).
+Ansible playbooks for Proxmox VE configuration and PVE installation.
+
+Part of the [homestak-dev](https://github.com/homestak-dev) organization.
 
 ## Quick Install
 
 ```bash
-curl -sSL https://raw.githubusercontent.com/JDeRose-net/ansible/master/install.sh | bash
+curl -sSL https://raw.githubusercontent.com/homestak-dev/ansible/master/install.sh | bash
 ```
 
 Custom username (default: `sysadm`):
 
 ```bash
-curl -sSL https://raw.githubusercontent.com/JDeRose-net/ansible/master/install.sh | NEWUSER=myuser bash
+curl -sSL https://raw.githubusercontent.com/homestak-dev/ansible/master/install.sh | NEWUSER=myuser bash
 ```
 
 ## After Install
@@ -96,3 +98,19 @@ roles/
 ├── proxmox         # PVE-specific (subscription nag)
 └── pve-install     # Install PVE on Debian
 ```
+
+## Documentation
+
+See [CLAUDE.md](CLAUDE.md) for detailed playbook information and E2E testing roles.
+
+## Related Repos
+
+| Repo | Purpose |
+|------|---------|
+| [iac-driver](https://github.com/homestak-dev/iac-driver) | E2E test orchestration |
+| [packer](https://github.com/homestak-dev/packer) | Custom Debian cloud images |
+| [tofu](https://github.com/homestak-dev/tofu) | VM provisioning with OpenTofu |
+
+## License
+
+Apache 2.0 - see [LICENSE](LICENSE)
