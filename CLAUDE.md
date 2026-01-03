@@ -117,39 +117,12 @@ Creates non-privileged sudoer user (local_user variable).
 
 ## E2E Testing Roles
 
-### pve-iac (Generic IaC Tooling)
+| Role | Purpose |
+|------|---------|
+| `pve-iac` | Install packer/tofu, create API token (reusable) |
+| `nested-pve` | Configure inner PVE for E2E tests (depends on pve-iac) |
 
-Installs infrastructure-as-code tools on any Proxmox host. Reusable for dev, k8s, or other deployments.
-
-**Tasks:**
-- `tools.yml` - Install packer and tofu from official repos
-- `api-token.yml` - Create `root@pam!tofu` API token
-
-**Usage:**
-```bash
-ansible-playbook -i inventory/remote-dev.yml playbooks/pve-iac-setup.yml \
-  -e ansible_host=<IP>
-```
-
-### nested-pve (E2E Test Configuration)
-
-Configures an inner PVE for nested VM testing. Depends on `pve-iac` role.
-
-**Tasks:**
-- `network.yml` - Configure vmbr0 bridge (required after Debian→PVE conversion)
-- `ssh-keys.yml` - Copy SSH keys for nested VM access
-- `copy-files.yml` - Deploy packer templates, tofu environments, generate tfvars
-
-**Usage:**
-```bash
-ansible-playbook -i inventory/remote-dev.yml playbooks/nested-pve-setup.yml \
-  -e ansible_host=<IP>
-```
-
-**Generated files on inner PVE:**
-- `/root/packer/` - Packer templates and scripts
-- `/root/tofu/` - Tofu modules and environments
-- `/root/tofu/envs/test/terraform.tfvars` - Auto-generated with API token
+See `../iac-driver/CLAUDE.md` for full E2E procedure and architecture.
 
 ## GitHub Repository
 
