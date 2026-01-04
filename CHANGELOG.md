@@ -10,8 +10,10 @@
   - `dhcp` - Convert interface to DHCP
   - `static` - Convert interface to static IP
   - `ipv6` - Enable/disable IPv6
-  - `reboot` - Reboot and wait for reconnection
-- Add `pve-network.yml` playbook
+  - `reboot` - Reboot and wait for reconnection (handles IP changes)
+- Add `pve-network.yml` playbook (push model)
+- Add `trigger-network.yml` playbook (push-triggers-pull model)
+- Add `homestak-bootstrap.sh` for unified local bootstrap and execution
 
 ### Changes
 

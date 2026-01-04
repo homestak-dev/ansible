@@ -1,0 +1,132 @@
+---
+# Push-Triggers-Pull: Network Configuration
+#
+# This playbook triggers local execution of network changes on the target,
+# avoiding SSH connection issues when IP changes.
+#
+# Usage:
+#   ansible-playbook -i inventory/remote-dev.yml playbooks/trigger-network.yml \
+#     -e ansible_host=10.0.12.62 \
+#     -e pve_network_tasks='["reip","reboot"]' \
+#     -e pve_new_ip=10.0.12.100 \
+#     -e pve_new_gateway=10.0.12.1
+#
+# How it works:
+#   1. Ensures homestak bootstrap is installed on target
+#   2. Writes vars to a temp file on target
+#   3. Triggers local ansible-playbook execution (async)
+#   4. Waits for new IP to come up (if changed)
+#   5. Verifies success via SSH to new IP
+#
+
+- name: Trigger local network configuration
+  hosts: target
+  become: true
+  gather_facts: true
+
+  vars:
+    homestak_dir: /opt/homestak
+    vars_file: /tmp/network-trigger-vars.yml
+
+  tasks:
+    - name: Determine expected IP after changes
+      ansible.builtin.set_fact:
+        expected_ip: "{{ pve_new_ip if (pve_new_ip is defined and pve_new_ip | length > 0) else ansible_host }}"
+
+    - name: Check if homestak is bootstrapped
+      ansible.builtin.stat:
+        path: "{{ homestak_dir }}/run-local.sh"
+      register: bootstrap_check
+
+    - name: Bootstrap homestak if needed
+      ansible.builtin.shell: |
+        curl -fsSL https://raw.githubusercontent.com/homestak-dev/ansible/master/homestak-bootstrap.sh | bash
+      when: not bootstrap_check.stat.exists
+      args:
+        executable: /bin/bash
+
+    - name: Write network vars to target
+      ansible.builtin.copy:
+        content: |
+          ---
+          pve_network_tasks: {{ pve_network_tasks | to_yaml }}
+          pve_new_ip: "{{ pve_new_ip | default('') }}"
+          pve_new_gateway: "{{ pve_new_gateway | default('') }}"
+          pve_new_netmask: {{ pve_new_netmask | default(24) }}
+          pve_new_hostname: "{{ pve_new_hostname | default('') }}"
+          pve_new_fqdn: "{{ pve_new_fqdn | default('') }}"
+          pve_network_interface: "{{ pve_network_interface | default('vmbr0') }}"
+          pve_ipv6_enabled: {{ pve_ipv6_enabled | default(true) | to_yaml }}
+          pve_reboot_timeout: {{ pve_reboot_timeout | default(300) }}
+        dest: "{{ vars_file }}"
+        mode: '0600'
+
+    - name: Create trigger script
+      ansible.builtin.copy:
+        content: |
+          #!/bin/bash
+          # Triggered network change - runs locally
+          exec > /var/log/network-trigger.log 2>&1
+          echo "==> Starting network configuration at $(date)"
+          cd {{ homestak_dir }}/ansible
+          ansible-playbook -i inventory/local.yml playbooks/pve-network.yml \
+            -c local -e @{{ vars_file }}
+          echo "==> Completed at $(date)"
+        dest: /tmp/network-trigger.sh
+        mode: '0755'
+
+    - name: Trigger local execution (async)
+      ansible.builtin.shell: |
+        nohup /tmp/network-trigger.sh &
+        sleep 2
+      async: 10
+      poll: 0
+
+    - name: Wait for host to go down (if reboot requested)
+      ansible.builtin.wait_for:
+        host: "{{ ansible_host }}"
+        port: 22
+        state: stopped
+        delay: 5
+        timeout: 120
+      delegate_to: localhost
+      become: false
+      when: "'reboot' in pve_network_tasks"
+
+    - name: Wait for expected IP to come up
+      ansible.builtin.wait_for:
+        host: "{{ expected_ip }}"
+        port: 22
+        state: started
+        delay: 10
+        timeout: "{{ pve_reboot_timeout | default(300) }}"
+      delegate_to: localhost
+      become: false
+      when: "'reboot' in pve_network_tasks"
+
+    - name: Pause for SSH to stabilize
+      ansible.builtin.pause:
+        seconds: 5
+      when: "'reboot' in pve_network_tasks"
+
+    - name: Verify result
+      ansible.builtin.shell: |
+        ssh -o StrictHostKeyChecking=accept-new -o ConnectTimeout=10 \
+          {{ ansible_user }}@{{ expected_ip }} \
+          "hostname && ip -4 addr show {{ pve_network_interface | default('vmbr0') }} | grep inet"
+      register: verify_result
+      delegate_to: localhost
+      become: false
+      changed_when: false
+
+    - name: Display result
+      ansible.builtin.debug:
+        msg: "{{ verify_result.stdout_lines }}"
+
+    - name: Cleanup vars file
+      ansible.builtin.shell: |
+        ssh -o StrictHostKeyChecking=accept-new {{ ansible_user }}@{{ expected_ip }} \
+          "rm -f {{ vars_file }} /tmp/network-trigger.sh"
+      delegate_to: localhost
+      become: false
+      changed_when: false

@@ -24,8 +24,9 @@ ansible-playbook -i inventory/remote-dev.yml playbooks/pve-install.yml \
 
 ```
 ansible/
-├── install.sh            # curl|bash entry point
-├── bootstrap.sh          # Pre-ansible system prep
+├── homestak-bootstrap.sh # Unified bootstrap (recommended)
+├── install.sh            # Legacy curl|bash entry point
+├── bootstrap.sh          # Legacy pre-ansible system prep
 ├── ansible.cfg           # Ansible configuration
 ├── inventory/
 │   ├── local.yml         # Local execution (ansible_connection: local)
@@ -41,6 +42,7 @@ ansible/
 │   ├── pve-setup.yml     # Core PVE config
 │   ├── pve-install.yml   # Install PVE on Debian 13 Trixie
 │   ├── pve-network.yml   # Network config (re-IP, rename, IPv6)
+│   ├── trigger-network.yml # Push-triggers-pull for network changes
 │   ├── pve-iac-setup.yml # Install IaC tools (packer, tofu)
 │   ├── nested-pve-setup.yml  # E2E test: configure inner PVE
 │   └── user.yml          # User management only
@@ -57,7 +59,21 @@ ansible/
 
 ## Installation Methods
 
-### curl|bash (fresh Proxmox)
+### Homestak Bootstrap (recommended)
+```bash
+# Bootstrap and run locally
+curl -fsSL https://raw.githubusercontent.com/homestak-dev/ansible/master/homestak-bootstrap.sh | bash
+
+# Bootstrap and apply pve-setup
+./homestak-bootstrap.sh --apply pve-setup
+
+# After bootstrap, run playbooks locally
+/opt/homestak/run-local.sh pve-setup
+/opt/homestak/run-local.sh user -e local_user=myuser
+/opt/homestak/run-local.sh network -e @/path/to/vars.yml
+```
+
+### Legacy curl|bash
 ```bash
 curl -fsSL https://raw.githubusercontent.com/homestak-dev/ansible/master/install.sh | NEWUSER=sysadm bash
 ```
@@ -69,6 +85,39 @@ cd /opt/ansible
 ./bootstrap.sh
 ansible-playbook -i inventory/local.yml playbooks/pve-setup.yml
 ansible-playbook -i inventory/local.yml playbooks/user.yml
+```
+
+## Execution Models
+
+### Push Model (traditional)
+Remote controller SSHs to target and runs playbooks:
+```bash
+ansible-playbook -i inventory/remote-dev.yml playbooks/pve-network.yml \
+  -e ansible_host=10.0.12.62 -e ansible_user=root ...
+```
+**Limitation**: SSH connection breaks when IP changes.
+
+### Push-Triggers-Pull Model (for network changes)
+Controller triggers local execution on target, avoiding SSH issues:
+```bash
+ansible-playbook -i inventory/remote-dev.yml playbooks/trigger-network.yml \
+  -e ansible_host=10.0.12.62 \
+  -e pve_network_tasks='["reip","reboot"]' \
+  -e pve_new_ip=10.0.12.100 \
+  -e pve_new_gateway=10.0.12.1
+```
+**How it works**:
+1. Pushes vars to target
+2. Triggers local ansible-playbook execution (async)
+3. Target applies changes and reboots itself
+4. Controller waits for new IP, verifies success
+
+### Local Model (on-host)
+Run directly on the PVE host:
+```bash
+/opt/homestak/run-local.sh network \
+  -e pve_network_tasks='["reip","reboot"]' \
+  -e pve_new_ip=10.0.12.100
 ```
 
 ## Key Variables
