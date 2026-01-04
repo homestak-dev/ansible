@@ -1,7 +1,0 @@
----
-# Full setup: PVE configuration + user creation
-- name: Configure Proxmox PVE host
-  ansible.builtin.import_playbook: pve-setup.yml
-
-- name: Configure local user
-  ansible.builtin.import_playbook: user.yml

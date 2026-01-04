@@ -22,28 +22,24 @@ As root:
 
 ```bash
 cd /opt/ansible
-ansible-playbook -i inventory/local.yml playbooks/site.yml -e local_user=sysadm
+ansible-playbook -i inventory/local.yml playbooks/pve-setup.yml
+ansible-playbook -i inventory/local.yml playbooks/user.yml -e local_user=sysadm
 passwd sysadm
+```
+
+Or use iac-driver:
+
+```bash
+cd ../iac-driver && ./run.sh --scenario pve-configure --local
 ```
 
 ## Playbooks
 
 | Playbook | Description |
 |----------|-------------|
-| `site.yml` | Full post-install setup (imports pve-setup + user) |
 | `pve-setup.yml` | Core PVE config (packages, SSH, subscription nag) |
-| `user.yml` | User management only (create user, sudo, SSH keys) |
+| `user.yml` | User management (create user, sudo, SSH keys) |
 | `pve-install.yml` | Install PVE on Debian 13 Trixie |
-
-Run individually:
-
-```bash
-# Just PVE config (no user)
-ansible-playbook -i inventory/local.yml playbooks/pve-setup.yml
-
-# Just user setup
-ansible-playbook -i inventory/local.yml playbooks/user.yml -e local_user=sysadm
-```
 
 ## Install PVE on Debian
 
@@ -81,7 +77,6 @@ Requirements:
 
 ```
 playbooks/
-├── site.yml        # Full post-install setup
 ├── pve-setup.yml   # Core PVE config
 ├── pve-install.yml # Install PVE on Debian
 └── user.yml        # User management
