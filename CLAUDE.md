@@ -24,9 +24,6 @@ ansible-playbook -i inventory/remote-dev.yml playbooks/pve-install.yml \
 
 ```
 ansible/
-├── homestak-bootstrap.sh # Unified bootstrap (recommended)
-├── install.sh            # Legacy curl|bash entry point
-├── bootstrap.sh          # Legacy pre-ansible system prep
 ├── ansible.cfg           # Ansible configuration
 ├── inventory/
 │   ├── local.yml         # Local execution (ansible_connection: local)
@@ -57,34 +54,26 @@ ansible/
     └── nested-pve/       # E2E: network bridge, SSH keys, copy files
 ```
 
-## Installation Methods
+## Installation
 
-### Homestak Bootstrap (recommended)
+See [homestak-dev/bootstrap](https://github.com/homestak-dev/bootstrap) for the recommended installation method:
+
 ```bash
-# Bootstrap and run locally
-curl -fsSL https://raw.githubusercontent.com/homestak-dev/ansible/master/homestak-bootstrap.sh | bash
+# One-command setup
+curl -fsSL https://raw.githubusercontent.com/homestak-dev/bootstrap/master/install.sh | bash
 
-# Bootstrap and apply pve-setup
-./homestak-bootstrap.sh --apply pve-setup
-
-# After bootstrap, run playbooks locally
-/opt/homestak/run-local.sh pve-setup
-/opt/homestak/run-local.sh user -e local_user=myuser
-/opt/homestak/run-local.sh network -e @/path/to/vars.yml
+# After bootstrap, use the 'homestak' command
+homestak pve-setup
+homestak user -e local_user=myuser
+homestak network -e pve_network_tasks='["static"]' -e pve_new_ip=10.0.12.100
 ```
 
-### Legacy curl|bash
-```bash
-curl -fsSL https://raw.githubusercontent.com/homestak-dev/ansible/master/install.sh | NEWUSER=sysadm bash
-```
-
-### Manual
+### Manual (without bootstrap)
 ```bash
 git clone https://github.com/homestak-dev/ansible.git /opt/ansible
 cd /opt/ansible
-./bootstrap.sh
-ansible-playbook -i inventory/local.yml playbooks/pve-setup.yml
-ansible-playbook -i inventory/local.yml playbooks/user.yml
+apt install -y ansible git
+ansible-playbook -i inventory/local.yml playbooks/pve-setup.yml -c local
 ```
 
 ## Execution Models
@@ -135,6 +124,7 @@ Part of the [homestak-dev](https://github.com/homestak-dev) organization:
 
 | Repo | Purpose |
 |------|---------|
+| [bootstrap](https://github.com/homestak-dev/bootstrap) | Entry point - curl\|bash setup |
 | [ansible](https://github.com/homestak-dev/ansible) | This project - Proxmox configuration |
 | [iac-driver](https://github.com/homestak-dev/iac-driver) | E2E test orchestration |
 | [packer](https://github.com/homestak-dev/packer) | Custom Debian cloud images |
