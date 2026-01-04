@@ -2,10 +2,23 @@
 
 ## Unreleased
 
+### Features
+
+- Add `pve-network` role for network configuration tasks:
+  - `reip` - Change static IP address
+  - `rename` - Change hostname and FQDN
+  - `dhcp` - Convert interface to DHCP
+  - `static` - Convert interface to static IP
+  - `ipv6` - Enable/disable IPv6
+  - `reboot` - Reboot and wait for reconnection (handles IP changes)
+- Add `pve-network.yml` playbook (push model)
+- Add `trigger-network.yml` playbook (push-triggers-pull model)
+
 ### Changes
 
 - Remove `site.yml` - combo logic moved to iac-driver `pve-configure` scenario
-- Update docs to reference `pve-configure` scenario or running playbooks directly
+- Remove `install.sh`, `bootstrap.sh` - moved to [bootstrap](https://github.com/homestak-dev/bootstrap) repo
+- Update docs to reference bootstrap repo and `pve-configure` scenario
 
 ## v0.1.0-rc1 - 2026-01-03
 

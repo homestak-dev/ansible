@@ -1,0 +1,61 @@
+---
+# pve-network: rename tasks
+# Changes the hostname and FQDN of a PVE host
+
+- name: Validate rename variables
+  ansible.builtin.assert:
+    that:
+      - pve_new_hostname | length > 0
+      - pve_new_fqdn | length > 0
+    fail_msg: "pve_new_hostname and pve_new_fqdn are required for rename task"
+
+- name: Get current hostname
+  ansible.builtin.command: hostname -s
+  register: current_hostname
+  changed_when: false
+
+- name: Get current IP from /etc/hosts
+  ansible.builtin.shell: |
+    grep -E '^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+\s+.*{{ current_hostname.stdout }}' /etc/hosts | awk '{print $1}' | head -1
+  register: current_ip
+  changed_when: false
+
+- name: Set hostname
+  ansible.builtin.hostname:
+    name: "{{ pve_new_hostname }}"
+
+- name: Update /etc/hosts with new hostname
+  ansible.builtin.lineinfile:
+    path: /etc/hosts
+    regexp: '^{{ current_ip.stdout }}\s+'
+    line: "{{ current_ip.stdout }} {{ pve_new_fqdn }} {{ pve_new_hostname }}"
+    state: present
+
+- name: Check if old PVE node config exists
+  ansible.builtin.stat:
+    path: "/etc/pve/nodes/{{ current_hostname.stdout }}"
+  register: old_node_config
+
+- name: Create new PVE node config directory
+  ansible.builtin.file:
+    path: "/etc/pve/nodes/{{ pve_new_hostname }}"
+    state: directory
+    mode: '0755'
+  when: old_node_config.stat.exists
+
+- name: Copy PVE node configuration to new hostname
+  ansible.builtin.shell: |
+    cp -r /etc/pve/nodes/{{ current_hostname.stdout }}/* /etc/pve/nodes/{{ pve_new_hostname }}/
+  when: old_node_config.stat.exists
+  register: copy_result
+  changed_when: copy_result.rc == 0
+
+- name: Regenerate SSL certificates
+  ansible.builtin.command: pvecm updatecerts --force
+  register: cert_result
+  changed_when: cert_result.rc == 0
+
+- name: Mark old node config for cleanup (post-reboot)
+  ansible.builtin.set_fact:
+    pve_old_hostname: "{{ current_hostname.stdout }}"
+  when: old_node_config.stat.exists

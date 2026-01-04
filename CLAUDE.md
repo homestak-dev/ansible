@@ -24,8 +24,6 @@ ansible-playbook -i inventory/remote-dev.yml playbooks/pve-install.yml \
 
 ```
 ansible/
-├── install.sh            # curl|bash entry point
-├── bootstrap.sh          # Pre-ansible system prep
 ├── ansible.cfg           # Ansible configuration
 ├── inventory/
 │   ├── local.yml         # Local execution (ansible_connection: local)
@@ -40,6 +38,8 @@ ansible/
 ├── playbooks/
 │   ├── pve-setup.yml     # Core PVE config
 │   ├── pve-install.yml   # Install PVE on Debian 13 Trixie
+│   ├── pve-network.yml   # Network config (re-IP, rename, IPv6)
+│   ├── trigger-network.yml # Push-triggers-pull for network changes
 │   ├── pve-iac-setup.yml # Install IaC tools (packer, tofu)
 │   ├── nested-pve-setup.yml  # E2E test: configure inner PVE
 │   └── user.yml          # User management only
@@ -49,24 +49,64 @@ ansible/
     ├── security/         # SSH hardening, fail2ban (prod)
     ├── proxmox/          # PVE-specific config (repos, certs)
     ├── pve-install/      # Install PVE on Debian 13
+    ├── pve-network/      # Network: re-IP, rename, DHCP/static, IPv6
     ├── pve-iac/          # Generic: install packer, tofu, API token
     └── nested-pve/       # E2E: network bridge, SSH keys, copy files
 ```
 
-## Installation Methods
+## Installation
 
-### curl|bash (fresh Proxmox)
+See [homestak-dev/bootstrap](https://github.com/homestak-dev/bootstrap) for the recommended installation method:
+
 ```bash
-curl -fsSL https://raw.githubusercontent.com/homestak-dev/ansible/master/install.sh | NEWUSER=sysadm bash
+# One-command setup
+curl -fsSL https://raw.githubusercontent.com/homestak-dev/bootstrap/master/install.sh | bash
+
+# After bootstrap, use the 'homestak' command
+homestak pve-setup
+homestak user -e local_user=myuser
+homestak network -e pve_network_tasks='["static"]' -e pve_new_ip=10.0.12.100
 ```
 
-### Manual
+### Manual (without bootstrap)
 ```bash
 git clone https://github.com/homestak-dev/ansible.git /opt/ansible
 cd /opt/ansible
-./bootstrap.sh
-ansible-playbook -i inventory/local.yml playbooks/pve-setup.yml
-ansible-playbook -i inventory/local.yml playbooks/user.yml
+apt install -y ansible git
+ansible-playbook -i inventory/local.yml playbooks/pve-setup.yml -c local
+```
+
+## Execution Models
+
+### Push Model (traditional)
+Remote controller SSHs to target and runs playbooks:
+```bash
+ansible-playbook -i inventory/remote-dev.yml playbooks/pve-network.yml \
+  -e ansible_host=10.0.12.62 -e ansible_user=root ...
+```
+**Limitation**: SSH connection breaks when IP changes.
+
+### Push-Triggers-Pull Model (for network changes)
+Controller triggers local execution on target, avoiding SSH issues:
+```bash
+ansible-playbook -i inventory/remote-dev.yml playbooks/trigger-network.yml \
+  -e ansible_host=10.0.12.62 \
+  -e pve_network_tasks='["reip","reboot"]' \
+  -e pve_new_ip=10.0.12.100 \
+  -e pve_new_gateway=10.0.12.1
+```
+**How it works**:
+1. Pushes vars to target
+2. Triggers local ansible-playbook execution (async)
+3. Target applies changes and reboots itself
+4. Controller waits for new IP, verifies success
+
+### Local Model (on-host)
+Run directly on the PVE host:
+```bash
+/opt/homestak/run-local.sh network \
+  -e pve_network_tasks='["reip","reboot"]' \
+  -e pve_new_ip=10.0.12.100
 ```
 
 ## Key Variables
@@ -84,6 +124,7 @@ Part of the [homestak-dev](https://github.com/homestak-dev) organization:
 
 | Repo | Purpose |
 |------|---------|
+| [bootstrap](https://github.com/homestak-dev/bootstrap) | Entry point - curl\|bash setup |
 | [ansible](https://github.com/homestak-dev/ansible) | This project - Proxmox configuration |
 | [iac-driver](https://github.com/homestak-dev/iac-driver) | E2E test orchestration |
 | [packer](https://github.com/homestak-dev/packer) | Custom Debian cloud images |
