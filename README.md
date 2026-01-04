@@ -103,6 +103,7 @@ See [CLAUDE.md](CLAUDE.md) for detailed playbook information and E2E testing rol
 | Repo | Purpose |
 |------|---------|
 | [bootstrap](https://github.com/homestak-dev/bootstrap) | Entry point - curl\|bash setup |
+| [site-config](https://github.com/homestak-dev/site-config) | Site-specific secrets and configuration |
 | [iac-driver](https://github.com/homestak-dev/iac-driver) | Orchestration engine |
 | [packer](https://github.com/homestak-dev/packer) | Custom Debian cloud images |
 | [tofu](https://github.com/homestak-dev/tofu) | VM provisioning with OpenTofu |

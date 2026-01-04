@@ -125,6 +125,7 @@ Part of the [homestak-dev](https://github.com/homestak-dev) organization:
 | Repo | Purpose |
 |------|---------|
 | [bootstrap](https://github.com/homestak-dev/bootstrap) | Entry point - curl\|bash setup |
+| [site-config](https://github.com/homestak-dev/site-config) | Site-specific secrets and configuration |
 | [ansible](https://github.com/homestak-dev/ansible) | This project - Proxmox configuration |
 | [iac-driver](https://github.com/homestak-dev/iac-driver) | Orchestration engine |
 | [packer](https://github.com/homestak-dev/packer) | Custom Debian cloud images |
