@@ -40,6 +40,7 @@ ansible/
 ├── playbooks/
 │   ├── pve-setup.yml     # Core PVE config
 │   ├── pve-install.yml   # Install PVE on Debian 13 Trixie
+│   ├── pve-network.yml   # Network config (re-IP, rename, IPv6)
 │   ├── pve-iac-setup.yml # Install IaC tools (packer, tofu)
 │   ├── nested-pve-setup.yml  # E2E test: configure inner PVE
 │   └── user.yml          # User management only
@@ -49,6 +50,7 @@ ansible/
     ├── security/         # SSH hardening, fail2ban (prod)
     ├── proxmox/          # PVE-specific config (repos, certs)
     ├── pve-install/      # Install PVE on Debian 13
+    ├── pve-network/      # Network: re-IP, rename, DHCP/static, IPv6
     ├── pve-iac/          # Generic: install packer, tofu, API token
     └── nested-pve/       # E2E: network bridge, SSH keys, copy files
 ```

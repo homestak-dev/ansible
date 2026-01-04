@@ -1,0 +1,34 @@
+---
+# pve-network role - dispatcher
+# Includes task files based on pve_network_tasks list
+
+- name: Validate pve_network_tasks is defined
+  ansible.builtin.assert:
+    that:
+      - pve_network_tasks is defined
+      - pve_network_tasks | length > 0
+    fail_msg: "pve_network_tasks must be defined and non-empty"
+
+- name: Run re-IP tasks
+  ansible.builtin.include_tasks: reip.yml
+  when: "'reip' in pve_network_tasks"
+
+- name: Run rename tasks
+  ansible.builtin.include_tasks: rename.yml
+  when: "'rename' in pve_network_tasks"
+
+- name: Run DHCP tasks
+  ansible.builtin.include_tasks: dhcp.yml
+  when: "'dhcp' in pve_network_tasks"
+
+- name: Run static IP tasks
+  ansible.builtin.include_tasks: static.yml
+  when: "'static' in pve_network_tasks"
+
+- name: Run IPv6 tasks
+  ansible.builtin.include_tasks: ipv6.yml
+  when: "'ipv6' in pve_network_tasks"
+
+- name: Run reboot tasks
+  ansible.builtin.include_tasks: reboot.yml
+  when: "'reboot' in pve_network_tasks"

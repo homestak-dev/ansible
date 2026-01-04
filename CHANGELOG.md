@@ -2,6 +2,17 @@
 
 ## Unreleased
 
+### Features
+
+- Add `pve-network` role for network configuration tasks:
+  - `reip` - Change static IP address
+  - `rename` - Change hostname and FQDN
+  - `dhcp` - Convert interface to DHCP
+  - `static` - Convert interface to static IP
+  - `ipv6` - Enable/disable IPv6
+  - `reboot` - Reboot and wait for reconnection
+- Add `pve-network.yml` playbook
+
 ### Changes
 
 - Remove `site.yml` - combo logic moved to iac-driver `pve-configure` scenario

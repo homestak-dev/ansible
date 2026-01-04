@@ -1,0 +1,70 @@
+---
+# pve-network: DHCP tasks
+# Convert interface to DHCP
+# Multi-NIC safe: auto-detects bridge-ports from existing config
+
+- name: Detect current bridge-ports for interface
+  ansible.builtin.shell: |
+    grep -A10 "iface {{ pve_network_interface }}" /etc/network/interfaces | grep -m1 bridge-ports | awk '{print $2}'
+  register: detected_bridge_ports
+  changed_when: false
+  failed_when: false
+
+- name: Set bridge-ports (use provided or detected)
+  ansible.builtin.set_fact:
+    bridge_ports_actual: "{{ pve_bridge_ports if pve_bridge_ports is defined and pve_bridge_ports | length > 0 else detected_bridge_ports.stdout }}"
+
+- name: Fail if bridge-ports cannot be determined
+  ansible.builtin.fail:
+    msg: "Cannot determine bridge-ports. Provide pve_bridge_ports or ensure interface exists."
+  when: bridge_ports_actual | length == 0
+
+- name: Remove old non-managed interface block
+  ansible.builtin.shell: |
+    python3 << 'PYSCRIPT'
+    import sys
+    iface = "{{ pve_network_interface }}"
+    with open('/etc/network/interfaces', 'r') as f:
+        lines = f.read().split('\n')
+    result = []
+    skip_indented = False
+    in_ansible = False
+    for line in lines:
+        if '# BEGIN ANSIBLE MANAGED' in line:
+            in_ansible = True
+        if '# END ANSIBLE MANAGED' in line:
+            in_ansible = False
+            result.append(line)
+            continue
+        if in_ansible:
+            result.append(line)
+            continue
+        if skip_indented:
+            if line.startswith(('\t', ' ')) or line == '':
+                continue
+            skip_indented = False
+        if line.strip() == f'auto {iface}':
+            continue
+        if line.startswith(f'iface {iface} '):
+            skip_indented = True
+            continue
+        result.append(line)
+    with open('/etc/network/interfaces', 'w') as f:
+        f.write('\n'.join(result))
+    PYSCRIPT
+  args:
+    executable: /bin/bash
+  changed_when: true
+
+- name: Configure interface for DHCP
+  ansible.builtin.blockinfile:
+    path: /etc/network/interfaces
+    marker: "# {mark} ANSIBLE MANAGED - {{ pve_network_interface }}"
+    insertbefore: "^source"
+    block: |
+      auto {{ pve_network_interface }}
+      iface {{ pve_network_interface }} inet dhcp
+      	bridge-ports {{ bridge_ports_actual }}
+      	bridge-stp off
+      	bridge-fd 0
+    state: present

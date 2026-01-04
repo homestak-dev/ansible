@@ -1,0 +1,57 @@
+---
+# pve-network: reboot tasks
+# Reboot the host and wait for reconnection
+# Handles IP changes by reconnecting to new IP
+
+- name: Set target IP for reconnection
+  ansible.builtin.set_fact:
+    reconnect_ip: "{{ pve_new_ip if (pve_new_ip is defined and pve_new_ip | length > 0) else ansible_host }}"
+
+- name: Trigger reboot (async)
+  ansible.builtin.shell: sleep 2 && /sbin/reboot &
+  async: 1
+  poll: 0
+  ignore_errors: true
+
+- name: Wait for host to go down
+  ansible.builtin.wait_for:
+    host: "{{ ansible_host }}"
+    port: 22
+    state: stopped
+    delay: 5
+    timeout: 60
+  delegate_to: localhost
+  become: false
+
+- name: Wait for new IP to come up
+  ansible.builtin.wait_for:
+    host: "{{ reconnect_ip }}"
+    port: 22
+    state: started
+    delay: 10
+    timeout: "{{ pve_reboot_timeout }}"
+  delegate_to: localhost
+  become: false
+
+- name: Pause for SSH to stabilize
+  ansible.builtin.pause:
+    seconds: 5
+
+- name: Cleanup old PVE node config (if renamed)
+  ansible.builtin.shell: |
+    ssh -o StrictHostKeyChecking=accept-new {{ ansible_user }}@{{ reconnect_ip }} "rm -rf /etc/pve/nodes/{{ pve_old_hostname }}"
+  delegate_to: localhost
+  become: false
+  when: pve_old_hostname is defined
+
+- name: Verify hostname and IP
+  ansible.builtin.shell: |
+    ssh -o StrictHostKeyChecking=accept-new {{ ansible_user }}@{{ reconnect_ip }} "hostname -s && ip -4 addr show {{ pve_network_interface }} | grep inet"
+  register: verify_result
+  changed_when: false
+  delegate_to: localhost
+  become: false
+
+- name: Display verification results
+  ansible.builtin.debug:
+    msg: "{{ verify_result.stdout_lines }}"
