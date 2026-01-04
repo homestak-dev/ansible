@@ -126,7 +126,7 @@ Part of the [homestak-dev](https://github.com/homestak-dev) organization:
 |------|---------|
 | [bootstrap](https://github.com/homestak-dev/bootstrap) | Entry point - curl\|bash setup |
 | [ansible](https://github.com/homestak-dev/ansible) | This project - Proxmox configuration |
-| [iac-driver](https://github.com/homestak-dev/iac-driver) | E2E test orchestration |
+| [iac-driver](https://github.com/homestak-dev/iac-driver) | Orchestration engine |
 | [packer](https://github.com/homestak-dev/packer) | Custom Debian cloud images |
 | [tofu](https://github.com/homestak-dev/tofu) | VM provisioning with OpenTofu |
 
