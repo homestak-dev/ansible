@@ -1,5 +1,5 @@
 ---
-# Usage: ansible-playbook -i inventory/remote-dev.yml playbooks/site.yml -e ansible_host=<IP>
+# Usage: ansible-playbook -i inventory/remote-dev.yml playbooks/pve-setup.yml -e ansible_host=<IP>
 all:
   children:
     proxmox:

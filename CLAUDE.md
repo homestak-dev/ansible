@@ -5,19 +5,19 @@ Ansible playbooks for configuring fresh Proxmox VE installations and installing 
 ## Quick Reference
 
 ```bash
-# Post-install configuration (local)
-ansible-playbook -i inventory/local.yml playbooks/site.yml
+# Post-install configuration (local via iac-driver)
+cd ../iac-driver && ./run.sh --scenario pve-configure --local
 
-# Post-install configuration (remote)
-ansible-playbook -i inventory/remote-dev.yml playbooks/pve-setup.yml \
-  -e ansible_host=<IP>
+# Post-install configuration (remote via iac-driver)
+cd ../iac-driver && ./run.sh --scenario pve-configure --remote <IP>
+
+# Or run playbooks directly:
+ansible-playbook -i inventory/local.yml playbooks/pve-setup.yml
+ansible-playbook -i inventory/local.yml playbooks/user.yml
 
 # Install PVE on Debian 13 Trixie
 ansible-playbook -i inventory/remote-dev.yml playbooks/pve-install.yml \
   -e ansible_host=<IP> -e pve_hostname=<hostname>
-
-# User management only
-ansible-playbook -i inventory/local.yml playbooks/user.yml
 ```
 
 ## Project Structure
@@ -38,7 +38,6 @@ ansible/
 │       ├── dev.yml       # Dev tools, sudo_nopasswd: true
 │       └── prod.yml      # Strict SSH, fail2ban, sudo_nopasswd: false
 ├── playbooks/
-│   ├── site.yml          # Full setup (pve-setup + user)
 │   ├── pve-setup.yml     # Core PVE config
 │   ├── pve-install.yml   # Install PVE on Debian 13 Trixie
 │   ├── pve-iac-setup.yml # Install IaC tools (packer, tofu)
@@ -66,7 +65,8 @@ curl -fsSL https://raw.githubusercontent.com/homestak-dev/ansible/master/install
 git clone https://github.com/homestak-dev/ansible.git /opt/ansible
 cd /opt/ansible
 ./bootstrap.sh
-ansible-playbook -i inventory/local.yml playbooks/site.yml
+ansible-playbook -i inventory/local.yml playbooks/pve-setup.yml
+ansible-playbook -i inventory/local.yml playbooks/user.yml
 ```
 
 ## Key Variables

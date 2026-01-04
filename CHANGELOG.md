@@ -2,7 +2,10 @@
 
 ## Unreleased
 
-- (add changes here as you go)
+### Changes
+
+- Remove `site.yml` - combo logic moved to iac-driver `pve-configure` scenario
+- Update docs to reference `pve-configure` scenario or running playbooks directly
 
 ## v0.1.0-rc1 - 2026-01-03
 
