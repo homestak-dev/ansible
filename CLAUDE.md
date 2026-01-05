@@ -163,7 +163,49 @@ Creates non-privileged sudoer user (local_user variable).
 | `pve-iac` | Install packer/tofu, create API token (reusable) |
 | `nested-pve` | Configure inner PVE for E2E tests (depends on pve-iac) |
 
+**nested-pve role tasks:**
+- `network.yml` - Configure vmbr0 bridge for VM networking
+- `ssh-keys.yml` - Copy SSH keys for nested VM access
+- `copy-files.yml` - Sync homestak repos, enable snippets on local datastore, fix SSL certs (IPv6 workaround), create API token
+
 See `../iac-driver/CLAUDE.md` for full E2E procedure and architecture.
+
+## Community Role Adoption (Planned)
+
+See [GitHub Issue #8](https://github.com/homestak-dev/ansible/issues/8) for the full plan.
+
+### lae.proxmox (Validated)
+
+Tested successfully on Debian 13 Trixie. Can replace `roles/pve-install` and `roles/proxmox`:
+
+```bash
+# Install role
+ansible-galaxy role install lae.proxmox
+
+# Test playbook
+ansible-playbook -i '10.0.12.x,' playbooks/test-lae-proxmox.yml -u root
+```
+
+**Requirements:** Ansible 2.15+ (for `deb822_repository` module)
+
+**Features:** PVE installation, clustering, storage backends, subscription nag removal, Ceph, ZFS
+
+### DebOps (Under Evaluation)
+
+Comprehensive Debian-focused collection for base system roles:
+- `debops.apt` - APT configuration
+- `debops.sshd` - SSH hardening
+- `debops.users` - User management
+- `debops.ferm` / `debops.nftables` - Firewall
+
+### Planned Structure
+
+```
+collections/
+├── homestak/
+│   └── base/           # Debian-generic roles (cloud-init fix, iac_tools)
+└── requirements.yml    # lae.proxmox, DebOps, community.proxmox
+```
 
 ## GitHub Repository
 

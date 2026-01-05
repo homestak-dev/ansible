@@ -67,16 +67,22 @@
   args:
     creates: /root/.config/packer/plugins
 
-# Update test environment to use local PVE node (pve-deb)
-- name: Configure test environment for nested PVE
-  ansible.builtin.copy:
-    dest: /opt/homestak/site-config/envs/test.yaml
-    content: |
-      # Test environment (configured for nested PVE)
-      env: test
-      node: pve-deb           # Use local nested PVE
-      node_ip: "127.0.0.1"
-    mode: '0644'
+# Enable snippets on local datastore (required for cloud-init)
+- name: Enable snippets content type on local storage
+  ansible.builtin.shell: |
+    pvesm set local -content images,rootdir,vztmpl,backup,iso,snippets
+  changed_when: false
+
+# Fix SSL certificates (IPv6 link-local addresses break cert generation)
+- name: Regenerate PVE SSL certificates
+  ansible.builtin.shell: |
+    sysctl -w net.ipv6.conf.all.disable_ipv6=1
+    sysctl -w net.ipv6.conf.default.disable_ipv6=1
+    pvecm updatecerts --force 2>/dev/null || true
+    sysctl -w net.ipv6.conf.all.disable_ipv6=0
+    sysctl -w net.ipv6.conf.default.disable_ipv6=0
+    systemctl restart pveproxy
+  changed_when: false
 
 # Create API token on inner PVE for tofu
 # Delete and recreate to ensure we have the token value (only shown at creation)
@@ -94,10 +100,17 @@
   ansible.builtin.set_fact:
     pve_api_token: "{{ (token_result.stdout | from_json)['full-tokenid'] }}={{ (token_result.stdout | from_json).value }}"
 
-# Update secrets.yaml with the actual API token
+# Update secrets.yaml with the actual API token (both pve-deb and nested-pve keys)
 - name: Update secrets.yaml with pve-deb token
   ansible.builtin.lineinfile:
     path: /opt/homestak/site-config/secrets.yaml
     regexp: '^(\s*)pve-deb:.*$'
     line: '    pve-deb: {{ pve_api_token }}'
+  when: pve_api_token is defined
+
+- name: Update secrets.yaml with nested-pve token
+  ansible.builtin.lineinfile:
+    path: /opt/homestak/site-config/secrets.yaml
+    regexp: '^(\s*)nested-pve:.*$'
+    line: '    nested-pve: {{ pve_api_token }}'
   when: pve_api_token is defined

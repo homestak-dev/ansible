@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+### Community Role Evaluation
+
+- **lae.proxmox v1.10.0**: Successfully tested on Debian 13 Trixie
+  - Installs PVE, removes subscription nag, configures repositories
+  - Requires Ansible 2.15+ for `deb822_repository` module
+  - See GitHub Issue #8 for adoption plan
+- Add `playbooks/test-lae-proxmox.yml` for community role testing
+- Add `ansible-test` environment in site-config for role validation
+
 ### Phase 5: ConfigResolver Support
 
 - Add iac-driver sync to nested-pve role for recursive ConfigResolver deployment
