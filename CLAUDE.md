@@ -190,21 +190,24 @@ ansible-playbook -i '10.0.12.x,' playbooks/test-lae-proxmox.yml -u root
 
 **Features:** PVE installation, clustering, storage backends, subscription nag removal, Ceph, ZFS
 
-### DebOps (Under Evaluation)
+### DebOps (Not Recommended)
 
-Comprehensive Debian-focused collection for base system roles:
-- `debops.apt` - APT configuration
-- `debops.sshd` - SSH hardening
-- `debops.users` - User management
-- `debops.ferm` / `debops.nftables` - Firewall
+Evaluated but **not suitable** for homestak:
+- Requires Ansible 2.15+ (Debian ships 2.14)
+- Framework, not standalone roles - depends on custom plugins, 60+ global handlers
+- All-or-nothing adoption required
+- Overkill for homelab use case
+
+**Conclusion:** Keep current simple roles (base, users, security). They work with Debian's packaged Ansible and have no external dependencies.
 
 ### Planned Structure
 
 ```
 collections/
 ├── homestak/
-│   └── base/           # Debian-generic roles (cloud-init fix, iac_tools)
-└── requirements.yml    # lae.proxmox, DebOps, community.proxmox
+│   ├── debian/        # Debian-generic roles (base, users, security, networking)
+│   └── proxmox/       # PVE-specific roles (install, configure, api_token)
+└── requirements.yml   # lae.proxmox, community.proxmox
 ```
 
 ## GitHub Repository
