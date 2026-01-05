@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+### Phase 5: ConfigResolver Support
+
+- Add iac-driver sync to nested-pve role for recursive ConfigResolver deployment
+
 ## v0.5.0-rc1 - 2026-01-04
 
 Consolidated pre-release with network configuration.
