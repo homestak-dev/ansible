@@ -1,78 +1,92 @@
 ---
-# Copy packer and tofu files to nested PVE
+# Sync homestak repos to /opt/homestak on nested PVE
 
-# Packer files
-- name: Create packer directory structure
+- name: Create /opt/homestak directory
+  ansible.builtin.file:
+    path: /opt/homestak
+    state: directory
+    mode: '0755'
+
+# Sync site-config (needed for tofu config-loader)
+- name: Sync site-config
+  ansible.posix.synchronize:
+    src: "{{ site_config_src_dir }}/"
+    dest: /opt/homestak/site-config/
+    rsync_opts:
+      - "--exclude=.git"
+
+# Sync tofu
+- name: Sync tofu
+  ansible.posix.synchronize:
+    src: "{{ tofu_src_dir }}/"
+    dest: /opt/homestak/tofu/
+    rsync_opts:
+      - "--exclude=.git"
+      - "--exclude=.terraform"
+      - "--exclude=terraform.tfstate*"
+      - "--exclude=.terraform.lock.hcl"
+
+# Sync packer (for image building if needed)
+- name: Sync packer
+  ansible.posix.synchronize:
+    src: "{{ packer_src_dir }}/"
+    dest: /opt/homestak/packer/
+    rsync_opts:
+      - "--exclude=.git"
+      - "--exclude=images"
+      - "--exclude=logs"
+      - "--exclude=cache"
+
+# Create packer working directories
+- name: Create packer working directories
   ansible.builtin.file:
     path: "{{ item }}"
     state: directory
     mode: '0755'
   loop:
-    - /root/packer
-    - /root/packer/templates
-    - /root/packer/scripts
-    - /root/packer/cloud-init
-    - /root/packer/images
-    - /root/packer/logs
-    - /root/packer/cache
+    - /opt/homestak/packer/images
+    - /opt/homestak/packer/logs
+    - /opt/homestak/packer/cache
 
-- name: Copy packer templates
-  ansible.builtin.copy:
-    src: "{{ packer_src_dir }}/templates/"
-    dest: /root/packer/templates/
-    mode: '0644'
-
-- name: Copy packer scripts
-  ansible.builtin.copy:
-    src: "{{ packer_src_dir }}/scripts/"
-    dest: /root/packer/scripts/
-    mode: '0755'
-
-- name: Copy packer cloud-init files
-  ansible.builtin.copy:
-    src: "{{ packer_src_dir }}/cloud-init/"
-    dest: /root/packer/cloud-init/
-    mode: '0644'
-
-- name: Copy packer build script
-  ansible.builtin.copy:
-    src: "{{ packer_src_dir }}/build.sh"
-    dest: /root/packer/build.sh
-    mode: '0755'
-
-- name: Copy packer publish script
-  ansible.builtin.copy:
-    src: "{{ packer_src_dir }}/publish.sh"
-    dest: /root/packer/publish.sh
-    mode: '0755'
-
+# Initialize packer plugins
 - name: Initialize packer plugins
   ansible.builtin.shell: |
-    cd /root/packer/templates
+    cd /opt/homestak/packer/templates
     packer init debian-12-custom.pkr.hcl
   args:
     creates: /root/.config/packer/plugins
 
-# Tofu files
-- name: Create tofu directory structure
-  ansible.builtin.file:
-    path: /root/tofu
-    state: directory
-    mode: '0755'
+# Update test environment to use local PVE node (pve-deb)
+- name: Configure test environment for nested PVE
+  ansible.builtin.copy:
+    dest: /opt/homestak/site-config/envs/test.yaml
+    content: |
+      # Test environment (configured for nested PVE)
+      env: test
+      node: pve-deb           # Use local nested PVE
+      node_ip: "127.0.0.1"
+    mode: '0644'
 
-- name: Sync tofu modules and environments
-  ansible.posix.synchronize:
-    src: "{{ tofu_src_dir }}/"
-    dest: /root/tofu/
-    rsync_opts:
-      - "--exclude=.terraform"
-      - "--exclude=terraform.tfstate*"
-      - "--exclude=*.tfvars"
-      - "--exclude=.terraform.lock.hcl"
+# Create API token on inner PVE for tofu
+# Delete and recreate to ensure we have the token value (only shown at creation)
+- name: Delete existing tofu API token (if any)
+  ansible.builtin.shell: |
+    pveum user token remove root@pam tofu 2>/dev/null || true
+  changed_when: false
 
-- name: Generate terraform.tfvars for test environment
-  ansible.builtin.template:
-    src: terraform.tfvars.j2
-    dest: /root/tofu/envs/test/terraform.tfvars
-    mode: '0600'
+- name: Create tofu API token
+  ansible.builtin.shell: |
+    pveum user token add root@pam tofu --privsep 0 --output-format json
+  register: token_result
+
+- name: Parse API token
+  ansible.builtin.set_fact:
+    pve_api_token: "{{ (token_result.stdout | from_json)['full-tokenid'] }}={{ (token_result.stdout | from_json).value }}"
+
+# Update secrets.yaml with the actual API token
+- name: Update secrets.yaml with pve-deb token
+  ansible.builtin.lineinfile:
+    path: /opt/homestak/site-config/secrets.yaml
+    regexp: '^(\s*)pve-deb:.*$'
+    line: '    pve-deb: {{ pve_api_token }}'
   when: pve_api_token is defined

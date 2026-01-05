@@ -27,11 +27,11 @@
   failed_when: hostname_ip.stdout is search('127.0')
 
 - name: Download Proxmox GPG key
-  ansible.builtin.get_url:
-    url: "{{ pve_gpg_key_url }}"
-    dest: /usr/share/keyrings/proxmox-archive-keyring-trixie.gpg
-    checksum: "{{ pve_gpg_key_checksum }}"
-    mode: "0644"
+  ansible.builtin.shell: |
+    curl -fsSL -o /usr/share/keyrings/proxmox-archive-keyring-trixie.gpg "{{ pve_gpg_key_url }}"
+    chmod 644 /usr/share/keyrings/proxmox-archive-keyring-trixie.gpg
+  args:
+    creates: /usr/share/keyrings/proxmox-archive-keyring-trixie.gpg
 
 - name: Add Proxmox VE repository
   ansible.builtin.template:

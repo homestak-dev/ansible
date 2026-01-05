@@ -1,6 +1,14 @@
 # Changelog
 
-## Unreleased
+## v0.5.0-rc1 - 2026-01-04
+
+Consolidated pre-release with network configuration.
+
+### Highlights
+
+- pve-install role for Debian 13 → PVE conversion
+- pve-network role with reip, rename, dhcp, static, ipv6
+- E2E tested via nested-pve-roundtrip
 
 ### Features
 
@@ -18,6 +26,7 @@
 
 - Remove `site.yml` - combo logic moved to iac-driver `pve-configure` scenario
 - Remove `install.sh`, `bootstrap.sh` - moved to [bootstrap](https://github.com/homestak-dev/bootstrap) repo
+- Fix pve-install GPG key download for Debian 13 (use curl instead of get_url)
 - Update docs to reference bootstrap repo and `pve-configure` scenario
 
 ## v0.1.0-rc1 - 2026-01-03

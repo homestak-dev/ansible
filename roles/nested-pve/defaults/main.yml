@@ -21,5 +21,8 @@ packer_src_dir: /root/homestak/packer
 # Tofu source directory on controller
 tofu_src_dir: /root/homestak/tofu
 
+# Site-config source directory on controller
+site_config_src_dir: /root/homestak/site-config
+
 # Root password hash for test VMs
 root_password_hash: "{{ lookup('env', 'ROOT_PASSWORD_HASH') | default('') }}"
