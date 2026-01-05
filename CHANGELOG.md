@@ -14,6 +14,7 @@
 ### Phase 5: ConfigResolver Support
 
 - Add iac-driver sync to nested-pve role for recursive ConfigResolver deployment
+- Rename `pve-deb` to `nested-pve` in copy-files task (aligns with site-config)
 
 ## v0.5.0-rc1 - 2026-01-04
 

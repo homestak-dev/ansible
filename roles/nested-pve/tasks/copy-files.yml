@@ -100,14 +100,7 @@
   ansible.builtin.set_fact:
     pve_api_token: "{{ (token_result.stdout | from_json)['full-tokenid'] }}={{ (token_result.stdout | from_json).value }}"
 
-# Update secrets.yaml with the actual API token (both pve-deb and nested-pve keys)
-- name: Update secrets.yaml with pve-deb token
-  ansible.builtin.lineinfile:
-    path: /opt/homestak/site-config/secrets.yaml
-    regexp: '^(\s*)pve-deb:.*$'
-    line: '    pve-deb: {{ pve_api_token }}'
-  when: pve_api_token is defined
-
+# Update secrets.yaml with the actual API token
 - name: Update secrets.yaml with nested-pve token
   ansible.builtin.lineinfile:
     path: /opt/homestak/site-config/secrets.yaml
