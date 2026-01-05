@@ -37,6 +37,17 @@
       - "--exclude=logs"
       - "--exclude=cache"
 
+# Sync iac-driver (for ConfigResolver and recursive deployment)
+- name: Sync iac-driver
+  ansible.posix.synchronize:
+    src: "{{ iac_driver_src_dir }}/"
+    dest: /opt/homestak/iac-driver/
+    rsync_opts:
+      - "--exclude=.git"
+      - "--exclude=__pycache__"
+      - "--exclude=reports"
+      - "--exclude=.states"
+
 # Create packer working directories
 - name: Create packer working directories
   ansible.builtin.file:
