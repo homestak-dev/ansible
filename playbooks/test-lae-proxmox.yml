@@ -1,0 +1,18 @@
+---
+# Test lae.proxmox role on Debian 13 Trixie
+# Usage: ansible-playbook -i '10.0.12.147,' playbooks/test-lae-proxmox.yml
+- name: Test lae.proxmox role
+  hosts: all
+  become: true
+  vars:
+    # Minimal config to test PVE installation
+    pve_group: "{{ inventory_hostname }}"
+    pve_remove_subscription_warning: true
+    pve_repository_line: "deb http://download.proxmox.com/debian/pve {{ ansible_distribution_release }} pve-no-subscription"
+    # Skip clustering for single-node test
+    pve_cluster_enabled: false
+    # Reboot after kernel installation
+    pve_reboot_on_kernel_update: true
+
+  roles:
+    - role: lae.proxmox
