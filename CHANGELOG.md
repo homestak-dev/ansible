@@ -17,7 +17,9 @@ Reorganized roles into two Ansible collections for better separation of concerns
 - `configure` - PVE config, nag removal (from proxmox)
 - `networking` - Re-IP, rename, DHCP/static, IPv6 (from pve-network)
 - `api_token` - Create pveum API token (extracted from pve-iac)
-- `nested` - E2E testing setup (from nested-pve)
+
+**Local roles** (not in collections):
+- `nested-pve` - E2E testing setup (kept in roles/ for internal use)
 
 **Breaking Changes:**
 - Playbooks now use FQCN role references (e.g., `homestak.debian.base`)

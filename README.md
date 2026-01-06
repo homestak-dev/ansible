@@ -90,8 +90,9 @@ collections/
                 ├── install/      # Install PVE on Debian
                 ├── configure/    # Subscription nag, repos
                 ├── networking/   # Re-IP, rename, bridges
-                ├── api_token/    # pveum API token
-                └── nested/       # E2E testing setup
+                └── api_token/    # pveum API token
+roles/
+└── nested-pve/           # E2E testing (not in collections)
 playbooks/
 ├── pve-setup.yml   # Core PVE config
 ├── pve-install.yml # Install PVE on Debian

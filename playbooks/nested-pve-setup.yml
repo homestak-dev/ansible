@@ -23,7 +23,7 @@
         msg: "Configuring nested PVE at {{ ansible_host }}"
 
   roles:
-    - homestak.proxmox.nested
+    - nested-pve
 
   post_tasks:
     - name: Display completion message

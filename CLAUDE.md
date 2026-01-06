@@ -41,8 +41,7 @@ ansible/
 │                   ├── install/      # Install PVE on Debian 13
 │                   ├── configure/    # PVE config (repos, nag removal)
 │                   ├── networking/   # Re-IP, rename, DHCP/static, IPv6
-│                   ├── api_token/    # Create pveum API token
-│                   └── nested/       # E2E: bridge, SSH keys, copy files
+│                   └── api_token/    # Create pveum API token
 ├── inventory/
 │   ├── local.yml         # Local execution (ansible_connection: local)
 │   ├── local-dev.yml     # Local with dev group settings
@@ -61,7 +60,9 @@ ansible/
 │   ├── pve-iac-setup.yml # Install IaC tools (packer, tofu)
 │   ├── nested-pve-setup.yml  # E2E test: configure inner PVE
 │   └── user.yml          # User management only
-└── roles/                # Legacy roles (deprecated, use collections)
+└── roles/
+    ├── nested-pve/       # E2E testing (not in collections)
+    └── ...               # Legacy roles (deprecated, use collections)
 ```
 
 ## Collections
@@ -89,7 +90,12 @@ PVE-specific roles (depend on `homestak.debian`):
 | `configure` | PVE config (repos, subscription nag removal) |
 | `networking` | Re-IP, rename, DHCP/static, IPv6, vmbr0 |
 | `api_token` | Create pveum API token for tofu |
-| `nested` | E2E testing: bridge, SSH keys, copy files |
+
+### Local Roles (not in collections)
+
+| Role | Purpose |
+|------|---------|
+| `nested-pve` | E2E testing: bridge, SSH keys, copy files |
 
 ### Role References (FQCN)
 

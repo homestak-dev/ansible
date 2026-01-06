@@ -1,6 +1,0 @@
----
-# nested role metadata
-
-dependencies:
-  - homestak.debian.iac_tools
-  - homestak.proxmox.api_token
