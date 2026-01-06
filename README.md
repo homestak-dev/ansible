@@ -2,36 +2,7 @@
 
 Ansible playbooks for Proxmox VE configuration and PVE installation.
 
-Part of the [homestak-dev](https://github.com/homestak-dev) organization.
-
-## Quick Install
-
-```bash
-curl -sSL https://raw.githubusercontent.com/homestak-dev/ansible/master/install.sh | bash
-```
-
-Custom username (default: `sysadm`):
-
-```bash
-curl -sSL https://raw.githubusercontent.com/homestak-dev/ansible/master/install.sh | NEWUSER=myuser bash
-```
-
-## After Install
-
-As root:
-
-```bash
-cd /opt/ansible
-ansible-playbook -i inventory/local.yml playbooks/pve-setup.yml
-ansible-playbook -i inventory/local.yml playbooks/user.yml -e local_user=sysadm
-passwd sysadm
-```
-
-Or use iac-driver:
-
-```bash
-cd ../iac-driver && ./run.sh --scenario pve-configure --local
-```
+Part of the [homestak-dev](https://github.com/homestak-dev) organization. See [bootstrap](https://github.com/homestak-dev/bootstrap) for installation.
 
 ## Playbooks
 
