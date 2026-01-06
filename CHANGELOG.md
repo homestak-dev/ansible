@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## v0.6.0-rc1 - 2026-01-06
 
 ### Collection Split (#9)
 
@@ -43,6 +43,11 @@ Reorganized roles into two Ansible collections for better separation of concerns
 
 - Add iac-driver sync to nested-pve role for recursive ConfigResolver deployment
 - Rename `pve-deb` to `nested-pve` in copy-files task (aligns with site-config)
+
+### Bug Fixes
+
+- Remove `ansible.posix.synchronize` dependency - replace with tar+unarchive pattern for ansible-core compatibility
+- Fix `api_token` role idempotency check (JSON output format)
 
 ## v0.5.0-rc1 - 2026-01-04
 
