@@ -28,7 +28,7 @@
         msg: "Installing Proxmox VE on {{ pve_hostname }} ({{ ansible_host }})"
 
   roles:
-    - pve-install
+    - homestak.proxmox.install
 
   post_tasks:
     - name: Installation complete

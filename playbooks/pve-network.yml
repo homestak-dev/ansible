@@ -37,4 +37,4 @@
   gather_facts: true
 
   roles:
-    - pve-network
+    - homestak.proxmox.networking

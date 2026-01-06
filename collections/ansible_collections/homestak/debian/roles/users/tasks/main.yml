@@ -1,0 +1,36 @@
+---
+- name: Ensure local user exists
+  ansible.builtin.user:
+    name: "{{ local_user }}"
+    shell: "{{ local_user_shell }}"
+    groups: sudo
+    append: true
+    create_home: true
+    state: present
+
+- name: Create .ssh directory for local user
+  ansible.builtin.file:
+    path: "/home/{{ local_user }}/.ssh"
+    state: directory
+    owner: "{{ local_user }}"
+    group: "{{ local_user }}"
+    mode: "0700"
+
+- name: Add authorized SSH keys for local user
+  ansible.builtin.lineinfile:
+    path: "/home/{{ local_user }}/.ssh/authorized_keys"
+    line: "{{ item }}"
+    create: true
+    owner: "{{ local_user }}"
+    group: "{{ local_user }}"
+    mode: "0600"
+  loop: "{{ ssh_authorized_keys | default([]) }}"
+  when: ssh_authorized_keys is defined and ssh_authorized_keys | length > 0
+
+- name: Configure passwordless sudo for local user
+  ansible.builtin.copy:
+    dest: "/etc/sudoers.d/{{ local_user }}"
+    content: "{{ local_user }} ALL=(ALL) NOPASSWD:ALL\n"
+    mode: "0440"
+    validate: "visudo -cf %s"
+  when: sudo_nopasswd | default(false)

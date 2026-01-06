@@ -1,0 +1,3 @@
+---
+# api_token defaults
+# Token is created with default settings (root@pam, privsep=0)

@@ -1,0 +1,5 @@
+---
+- name: Reboot for new kernel
+  ansible.builtin.reboot:
+    reboot_timeout: "{{ reboot_timeout }}"
+    msg: "Rebooting to load Proxmox kernel"

@@ -21,7 +21,8 @@
         msg: "Installing IaC tools on {{ ansible_host }}"
 
   roles:
-    - pve-iac
+    - homestak.debian.iac_tools
+    - homestak.proxmox.api_token
 
   post_tasks:
     - name: Display completion message

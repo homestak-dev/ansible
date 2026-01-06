@@ -1,0 +1,22 @@
+---
+namespace: homestak
+name: proxmox
+version: 1.0.0
+readme: README.md
+authors:
+  - homestak-dev <https://github.com/homestak-dev>
+description: Proxmox VE installation and configuration roles
+license_file: LICENSE
+tags:
+  - proxmox
+  - pve
+  - virtualization
+  - hypervisor
+repository: https://github.com/homestak-dev/ansible
+documentation: https://github.com/homestak-dev/ansible
+homepage: https://github.com/homestak-dev
+issues: https://github.com/homestak-dev/ansible/issues
+dependencies:
+  homestak.debian: ">=1.0.0"
+build_ignore:
+  - "*.tar.gz"

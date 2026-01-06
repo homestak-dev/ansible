@@ -4,7 +4,7 @@
   gather_facts: true
 
   roles:
-    - users
+    - homestak.debian.users
 
   post_tasks:
     - name: User setup complete

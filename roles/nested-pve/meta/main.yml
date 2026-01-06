@@ -1,5 +1,7 @@
 ---
 # nested-pve role metadata
+# E2E testing role - not part of published collections
 
 dependencies:
-  - role: pve-iac
+  - homestak.debian.iac_tools
+  - homestak.proxmox.api_token

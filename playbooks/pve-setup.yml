@@ -9,9 +9,9 @@
         msg: "Configuring {{ inventory_hostname }} for {{ env_name | default('unknown') }} environment"
 
   roles:
-    - base
-    - security
-    - proxmox
+    - homestak.debian.base
+    - homestak.debian.security
+    - homestak.proxmox.configure
 
   post_tasks:
     - name: PVE setup complete

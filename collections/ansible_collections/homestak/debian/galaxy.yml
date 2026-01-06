@@ -1,0 +1,21 @@
+---
+namespace: homestak
+name: debian
+version: 1.0.0
+readme: README.md
+authors:
+  - homestak-dev <https://github.com/homestak-dev>
+description: Debian-generic roles for system configuration
+license_file: LICENSE
+tags:
+  - debian
+  - linux
+  - system
+  - security
+  - networking
+repository: https://github.com/homestak-dev/ansible
+documentation: https://github.com/homestak-dev/ansible
+homepage: https://github.com/homestak-dev
+issues: https://github.com/homestak-dev/ansible/issues
+build_ignore:
+  - "*.tar.gz"

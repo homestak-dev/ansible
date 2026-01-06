@@ -25,6 +25,23 @@ ansible-playbook -i inventory/remote-dev.yml playbooks/pve-install.yml \
 ```
 ansible/
 ├── ansible.cfg           # Ansible configuration
+├── collections/
+│   └── ansible_collections/
+│       └── homestak/
+│           ├── debian/       # Debian-generic roles
+│           │   ├── galaxy.yml
+│           │   └── roles/
+│           │       ├── base/         # System packages, timezone, locale
+│           │       ├── users/        # Create local_user with sudo
+│           │       ├── security/     # SSH hardening, fail2ban (prod)
+│           │       └── iac_tools/    # Install packer, tofu
+│           └── proxmox/      # PVE-specific roles
+│               ├── galaxy.yml
+│               └── roles/
+│                   ├── install/      # Install PVE on Debian 13
+│                   ├── configure/    # PVE config (repos, nag removal)
+│                   ├── networking/   # Re-IP, rename, DHCP/static, IPv6
+│                   └── api_token/    # Create pveum API token
 ├── inventory/
 │   ├── local.yml         # Local execution (ansible_connection: local)
 │   ├── local-dev.yml     # Local with dev group settings
@@ -44,14 +61,51 @@ ansible/
 │   ├── nested-pve-setup.yml  # E2E test: configure inner PVE
 │   └── user.yml          # User management only
 └── roles/
-    ├── base/             # System packages, timezone, locale
-    ├── users/            # Create local_user with sudo
-    ├── security/         # SSH hardening, fail2ban (prod)
-    ├── proxmox/          # PVE-specific config (repos, certs)
-    ├── pve-install/      # Install PVE on Debian 13
-    ├── pve-network/      # Network: re-IP, rename, DHCP/static, IPv6
-    ├── pve-iac/          # Generic: install packer, tofu, API token
-    └── nested-pve/       # E2E: network bridge, SSH keys, copy files
+    ├── nested-pve/       # E2E testing (not in collections)
+    └── ...               # Legacy roles (deprecated, use collections)
+```
+
+## Collections
+
+Roles are organized into two collections:
+
+### homestak.debian
+
+Debian-generic roles that work on any Debian host (with or without Proxmox):
+
+| Role | Purpose |
+|------|---------|
+| `base` | System packages, timezone, locale |
+| `users` | Create local_user with sudo |
+| `security` | SSH hardening, fail2ban (prod) |
+| `iac_tools` | Install packer and tofu from official repos |
+
+### homestak.proxmox
+
+PVE-specific roles (depend on `homestak.debian`):
+
+| Role | Purpose |
+|------|---------|
+| `install` | Install PVE on Debian 13 Trixie |
+| `configure` | PVE config (repos, subscription nag removal) |
+| `networking` | Re-IP, rename, DHCP/static, IPv6, vmbr0 |
+| `api_token` | Create pveum API token for tofu |
+
+### Local Roles (not in collections)
+
+| Role | Purpose |
+|------|---------|
+| `nested-pve` | E2E testing: bridge, SSH keys, copy files |
+
+### Role References (FQCN)
+
+Playbooks use fully qualified collection names:
+
+```yaml
+roles:
+  - homestak.debian.base
+  - homestak.debian.security
+  - homestak.proxmox.configure
 ```
 
 ## Installation
@@ -156,33 +210,25 @@ Post-install configuration for existing PVE hosts:
 ### user.yml
 Creates non-privileged sudoer user (local_user variable).
 
-## E2E Testing Roles
+## E2E Testing
 
-| Role | Purpose |
-|------|---------|
-| `pve-iac` | Install packer/tofu, create API token (reusable) |
-| `nested-pve` | Configure inner PVE for E2E tests (depends on pve-iac) |
-
-**nested-pve role tasks:**
+The `homestak.proxmox.nested` role configures inner PVE for E2E tests:
 - `network.yml` - Configure vmbr0 bridge for VM networking
 - `ssh-keys.yml` - Copy SSH keys for nested VM access
-- `copy-files.yml` - Sync homestak repos, enable snippets on local datastore, fix SSL certs (IPv6 workaround), create API token
+- `copy-files.yml` - Sync homestak repos, enable snippets, fix SSL certs
+
+Dependencies: `homestak.debian.iac_tools`, `homestak.proxmox.api_token`
 
 See `../iac-driver/CLAUDE.md` for full E2E procedure and architecture.
 
-## Community Role Adoption (Planned)
-
-See [GitHub Issue #8](https://github.com/homestak-dev/ansible/issues/8) for the full plan.
+## Community Roles
 
 ### lae.proxmox (Validated)
 
-Tested successfully on Debian 13 Trixie. Can replace `roles/pve-install` and `roles/proxmox`:
+Tested successfully on Debian 13 Trixie. Alternative to `homestak.proxmox.install`:
 
 ```bash
-# Install role
 ansible-galaxy role install lae.proxmox
-
-# Test playbook
 ansible-playbook -i '10.0.12.x,' playbooks/test-lae-proxmox.yml -u root
 ```
 
@@ -193,22 +239,11 @@ ansible-playbook -i '10.0.12.x,' playbooks/test-lae-proxmox.yml -u root
 ### DebOps (Not Recommended)
 
 Evaluated but **not suitable** for homestak:
-- Requires Ansible 2.15+ (Debian ships 2.14)
 - Framework, not standalone roles - depends on custom plugins, 60+ global handlers
 - All-or-nothing adoption required
 - Overkill for homelab use case
 
-**Conclusion:** Keep current simple roles (base, users, security). They work with Debian's packaged Ansible and have no external dependencies.
-
-### Planned Structure
-
-```
-collections/
-├── homestak/
-│   ├── debian/        # Debian-generic roles (base, users, security, networking)
-│   └── proxmox/       # PVE-specific roles (install, configure, api_token)
-└── requirements.yml   # lae.proxmox, community.proxmox
-```
+**Conclusion:** Keep current simple roles in `homestak.debian` collection.
 
 ## GitHub Repository
 
