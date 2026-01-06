@@ -1,7 +1,9 @@
 ---
 - name: Set timezone
-  community.general.timezone:
-    name: "{{ timezone }}"
+  ansible.builtin.command:
+    cmd: timedatectl set-timezone {{ timezone }}
+  changed_when: true
+  when: timezone is defined
 
 - name: Update apt cache
   ansible.builtin.apt:

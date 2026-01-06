@@ -17,10 +17,13 @@
     mode: "0700"
 
 - name: Add authorized SSH keys for local user
-  ansible.posix.authorized_key:
-    user: "{{ local_user }}"
-    key: "{{ item }}"
-    state: present
+  ansible.builtin.lineinfile:
+    path: "/home/{{ local_user }}/.ssh/authorized_keys"
+    line: "{{ item }}"
+    create: true
+    owner: "{{ local_user }}"
+    group: "{{ local_user }}"
+    mode: "0600"
   loop: "{{ ssh_authorized_keys | default([]) }}"
   when: ssh_authorized_keys is defined and ssh_authorized_keys | length > 0
 
