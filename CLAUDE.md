@@ -26,22 +26,23 @@ ansible-playbook -i inventory/remote-dev.yml playbooks/pve-install.yml \
 ansible/
 ├── ansible.cfg           # Ansible configuration
 ├── collections/
-│   └── homestak/
-│       ├── debian/       # Debian-generic roles
-│       │   ├── galaxy.yml
-│       │   └── roles/
-│       │       ├── base/         # System packages, timezone, locale
-│       │       ├── users/        # Create local_user with sudo
-│       │       ├── security/     # SSH hardening, fail2ban (prod)
-│       │       └── iac_tools/    # Install packer, tofu
-│       └── proxmox/      # PVE-specific roles
-│           ├── galaxy.yml
-│           └── roles/
-│               ├── install/      # Install PVE on Debian 13
-│               ├── configure/    # PVE config (repos, nag removal)
-│               ├── networking/   # Re-IP, rename, DHCP/static, IPv6
-│               ├── api_token/    # Create pveum API token
-│               └── nested/       # E2E: bridge, SSH keys, copy files
+│   └── ansible_collections/
+│       └── homestak/
+│           ├── debian/       # Debian-generic roles
+│           │   ├── galaxy.yml
+│           │   └── roles/
+│           │       ├── base/         # System packages, timezone, locale
+│           │       ├── users/        # Create local_user with sudo
+│           │       ├── security/     # SSH hardening, fail2ban (prod)
+│           │       └── iac_tools/    # Install packer, tofu
+│           └── proxmox/      # PVE-specific roles
+│               ├── galaxy.yml
+│               └── roles/
+│                   ├── install/      # Install PVE on Debian 13
+│                   ├── configure/    # PVE config (repos, nag removal)
+│                   ├── networking/   # Re-IP, rename, DHCP/static, IPv6
+│                   ├── api_token/    # Create pveum API token
+│                   └── nested/       # E2E: bridge, SSH keys, copy files
 ├── inventory/
 │   ├── local.yml         # Local execution (ansible_connection: local)
 │   ├── local-dev.yml     # Local with dev group settings
