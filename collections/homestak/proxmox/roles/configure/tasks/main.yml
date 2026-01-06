@@ -1,0 +1,22 @@
+---
+- name: Check if subscription nag patch is needed
+  ansible.builtin.stat:
+    path: /usr/share/javascript/proxmox-widget-toolkit/proxmoxlib.js
+  register: proxmoxlib_stat
+
+- name: Remove Proxmox subscription nag
+  ansible.builtin.replace:
+    path: /usr/share/javascript/proxmox-widget-toolkit/proxmoxlib.js
+    regexp: "res === null \\|\\| res === undefined \\|\\| !res \\|\\| res\\n\\t\\t\\t.data.status.toLowerCase\\(\\) !== 'active'"
+    replace: "false"
+    backup: true
+  when:
+    - pve_remove_subscription_nag | default(false)
+    - proxmoxlib_stat.stat.exists
+  notify: Restart pveproxy
+
+- name: Ensure pveproxy service is running
+  ansible.builtin.systemd:
+    name: pveproxy
+    state: started
+    enabled: true

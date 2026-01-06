@@ -1,0 +1,109 @@
+---
+# Sync homestak repos to /opt/homestak on nested PVE
+
+- name: Create /opt/homestak directory
+  ansible.builtin.file:
+    path: /opt/homestak
+    state: directory
+    mode: '0755'
+
+# Sync site-config (needed for tofu config-loader)
+- name: Sync site-config
+  ansible.posix.synchronize:
+    src: "{{ site_config_src_dir }}/"
+    dest: /opt/homestak/site-config/
+    rsync_opts:
+      - "--exclude=.git"
+
+# Sync tofu
+- name: Sync tofu
+  ansible.posix.synchronize:
+    src: "{{ tofu_src_dir }}/"
+    dest: /opt/homestak/tofu/
+    rsync_opts:
+      - "--exclude=.git"
+      - "--exclude=.terraform"
+      - "--exclude=terraform.tfstate*"
+      - "--exclude=.terraform.lock.hcl"
+
+# Sync packer (for image building if needed)
+- name: Sync packer
+  ansible.posix.synchronize:
+    src: "{{ packer_src_dir }}/"
+    dest: /opt/homestak/packer/
+    rsync_opts:
+      - "--exclude=.git"
+      - "--exclude=images"
+      - "--exclude=logs"
+      - "--exclude=cache"
+
+# Sync iac-driver (for ConfigResolver and recursive deployment)
+- name: Sync iac-driver
+  ansible.posix.synchronize:
+    src: "{{ iac_driver_src_dir }}/"
+    dest: /opt/homestak/iac-driver/
+    rsync_opts:
+      - "--exclude=.git"
+      - "--exclude=__pycache__"
+      - "--exclude=reports"
+      - "--exclude=.states"
+
+# Create packer working directories
+- name: Create packer working directories
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    mode: '0755'
+  loop:
+    - /opt/homestak/packer/images
+    - /opt/homestak/packer/logs
+    - /opt/homestak/packer/cache
+
+# Initialize packer plugins
+- name: Initialize packer plugins
+  ansible.builtin.shell: |
+    cd /opt/homestak/packer/templates
+    packer init debian-12-custom.pkr.hcl
+  args:
+    creates: /root/.config/packer/plugins
+
+# Enable snippets on local datastore (required for cloud-init)
+- name: Enable snippets content type on local storage
+  ansible.builtin.shell: |
+    pvesm set local -content images,rootdir,vztmpl,backup,iso,snippets
+  changed_when: false
+
+# Fix SSL certificates (IPv6 link-local addresses break cert generation)
+- name: Regenerate PVE SSL certificates
+  ansible.builtin.shell: |
+    sysctl -w net.ipv6.conf.all.disable_ipv6=1
+    sysctl -w net.ipv6.conf.default.disable_ipv6=1
+    pvecm updatecerts --force 2>/dev/null || true
+    sysctl -w net.ipv6.conf.all.disable_ipv6=0
+    sysctl -w net.ipv6.conf.default.disable_ipv6=0
+    systemctl restart pveproxy
+  changed_when: false
+
+# Create API token on inner PVE for tofu
+# Delete and recreate to ensure we have the token value (only shown at creation)
+- name: Delete existing tofu API token (if any)
+  ansible.builtin.shell: |
+    pveum user token remove root@pam tofu 2>/dev/null || true
+  changed_when: false
+
+- name: Create tofu API token
+  ansible.builtin.shell: |
+    pveum user token add root@pam tofu --privsep 0 --output-format json
+  register: token_result
+
+- name: Parse API token
+  ansible.builtin.set_fact:
+    pve_api_token: "{{ (token_result.stdout | from_json)['full-tokenid'] }}={{ (token_result.stdout | from_json).value }}"
+
+# Update secrets.yaml with the actual API token
+- name: Update secrets.yaml with nested-pve token
+  ansible.builtin.lineinfile:
+    path: /opt/homestak/site-config/secrets.yaml
+    regexp: '^(\s*)nested-pve:.*$'
+    line: '    nested-pve: {{ pve_api_token }}'
+  when: pve_api_token is defined

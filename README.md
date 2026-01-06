@@ -76,6 +76,21 @@ Requirements:
 ## Structure
 
 ```
+collections/
+└── homestak/
+    ├── debian/           # Debian-generic roles
+    │   └── roles/
+    │       ├── base/         # Packages, timezone
+    │       ├── users/        # User creation, sudo, SSH keys
+    │       ├── security/     # SSH hardening, fail2ban
+    │       └── iac_tools/    # Install packer, tofu
+    └── proxmox/          # PVE-specific roles
+        └── roles/
+            ├── install/      # Install PVE on Debian
+            ├── configure/    # Subscription nag, repos
+            ├── networking/   # Re-IP, rename, bridges
+            ├── api_token/    # pveum API token
+            └── nested/       # E2E testing setup
 playbooks/
 ├── pve-setup.yml   # Core PVE config
 ├── pve-install.yml # Install PVE on Debian
@@ -86,12 +101,21 @@ inventory/
 ├── local-dev.yml
 ├── remote-dev.yml
 └── remote-prod.yml
-roles/
-├── base            # Packages, timezone
-├── users           # User creation, sudo, SSH keys
-├── security        # SSH hardening, fail2ban
-├── proxmox         # PVE-specific (subscription nag)
-└── pve-install     # Install PVE on Debian
+```
+
+## Collections
+
+Roles are organized into two Ansible collections:
+
+- **homestak.debian** - Debian-generic roles (work on any Debian host)
+- **homestak.proxmox** - PVE-specific roles (depends on homestak.debian)
+
+Playbooks reference roles using FQCN:
+
+```yaml
+roles:
+  - homestak.debian.base
+  - homestak.proxmox.configure
 ```
 
 ## Documentation

@@ -1,0 +1,28 @@
+---
+# pve-network role defaults
+#
+# Multi-NIC safe: interface-specific tasks use pve_network_interface
+# to target only the specified interface.
+
+# Task selection - list of tasks to run
+# Options: reip, rename, dhcp, static, ipv6, reboot
+pve_network_tasks: []
+
+# Re-IP variables
+pve_new_ip: ""
+pve_new_netmask: 24
+pve_new_gateway: ""
+
+# Rename variables
+pve_new_hostname: ""
+pve_new_fqdn: ""
+
+# IPv6 variables
+pve_ipv6_enabled: true
+
+# Interface variables
+pve_network_interface: "vmbr0"
+# pve_bridge_ports: auto-detected from existing config (override if needed)
+
+# Reboot behavior
+pve_reboot_timeout: 300

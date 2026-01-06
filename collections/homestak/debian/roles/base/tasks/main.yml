@@ -1,0 +1,25 @@
+---
+- name: Set timezone
+  community.general.timezone:
+    name: "{{ timezone }}"
+
+- name: Update apt cache
+  ansible.builtin.apt:
+    update_cache: true
+    cache_valid_time: 3600
+
+- name: Install common packages
+  ansible.builtin.apt:
+    name: "{{ common_packages }}"
+    state: present
+
+- name: Install extra packages for environment
+  ansible.builtin.apt:
+    name: "{{ extra_packages }}"
+    state: present
+  when: extra_packages | default([]) | length > 0
+
+- name: Remove old kernels (optional cleanup)
+  ansible.builtin.apt:
+    autoremove: true
+    purge: true

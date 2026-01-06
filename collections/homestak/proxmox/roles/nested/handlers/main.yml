@@ -1,0 +1,7 @@
+---
+# Handlers for nested-pve role
+
+- name: Apply network configuration
+  ansible.builtin.shell: |
+    ifreload -a || systemctl restart networking
+  listen: Apply network configuration

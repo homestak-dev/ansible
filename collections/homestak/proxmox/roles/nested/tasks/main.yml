@@ -1,0 +1,12 @@
+---
+# nested-pve - Setup for nested PVE E2E testing
+# Configures vmbr0 bridge, copies SSH keys and IaC files
+
+- name: Include network setup tasks
+  ansible.builtin.include_tasks: network.yml
+
+- name: Include SSH key copy tasks
+  ansible.builtin.include_tasks: ssh-keys.yml
+
+- name: Include file copy tasks
+  ansible.builtin.include_tasks: copy-files.yml

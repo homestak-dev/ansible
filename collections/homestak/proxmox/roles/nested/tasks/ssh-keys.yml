@@ -1,0 +1,20 @@
+---
+# Copy SSH keys to nested PVE for VM access
+
+- name: Ensure .ssh directory exists
+  ansible.builtin.file:
+    path: /root/.ssh
+    state: directory
+    mode: '0700'
+
+- name: Copy SSH private key
+  ansible.builtin.copy:
+    src: ~/.ssh/id_rsa
+    dest: /root/.ssh/id_rsa
+    mode: '0600'
+
+- name: Copy SSH public key
+  ansible.builtin.copy:
+    src: ~/.ssh/id_rsa.pub
+    dest: /root/.ssh/id_rsa.pub
+    mode: '0644'

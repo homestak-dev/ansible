@@ -1,0 +1,44 @@
+---
+- name: Configure SSH daemon
+  ansible.builtin.lineinfile:
+    path: /etc/ssh/sshd_config
+    regexp: "{{ item.regexp }}"
+    line: "{{ item.line }}"
+    state: present
+    validate: "sshd -t -f %s"
+  loop:
+    - regexp: "^#?Port "
+      line: "Port {{ ssh_port }}"
+    - regexp: "^#?PermitRootLogin "
+      line: "PermitRootLogin {{ ssh_permit_root_login }}"
+    - regexp: "^#?PasswordAuthentication "
+      line: "PasswordAuthentication {{ ssh_password_authentication }}"
+  notify: Restart sshd
+
+- name: Install fail2ban
+  ansible.builtin.apt:
+    name: fail2ban
+    state: present
+  when: fail2ban_enabled | default(false)
+
+- name: Configure fail2ban for SSH
+  ansible.builtin.copy:
+    dest: /etc/fail2ban/jail.local
+    content: |
+      [sshd]
+      enabled = true
+      port = {{ ssh_port }}
+      filter = sshd
+      logpath = /var/log/auth.log
+      maxretry = 5
+      bantime = 3600
+    mode: "0644"
+  when: fail2ban_enabled | default(false)
+  notify: Restart fail2ban
+
+- name: Enable fail2ban service
+  ansible.builtin.systemd:
+    name: fail2ban
+    enabled: true
+    state: started
+  when: fail2ban_enabled | default(false)

@@ -1,0 +1,65 @@
+---
+# Test DebOps roles on Debian 12/13
+# Usage: ansible-playbook -i '10.0.12.151,10.0.12.159,' playbooks/test-debops.yml -u root
+#
+# Purpose: Evaluate debops.apt, debops.sshd, debops.users roles for adoption
+# in the homestak collection split (issue #8)
+- name: Test DebOps roles
+  hosts: all
+  become: true
+  gather_facts: true
+
+  vars:
+    # --- debops.apt ---
+    apt__enabled: true
+    # Keep default sources.list management
+    apt__cache_valid_time: 3600
+
+    # --- debops.sshd ---
+    # Minimal SSH hardening (similar to our security role)
+    sshd__permit_root_login: 'prohibit-password'
+    sshd__password_authentication: 'no'
+    # Don't install molly-guard for test
+    sshd__optional_packages: []
+
+    # --- debops.users ---
+    users__enabled: true
+    users__default_shell: '/bin/bash'
+    # Test user creation
+    users__accounts:
+      - name: 'testuser'
+        groups: ['sudo']
+        shell: '/bin/bash'
+        sshkeys:
+          - '{{ lookup("file", "~/.ssh/id_rsa.pub") }}'
+
+  tasks:
+    - name: Display target info
+      ansible.builtin.debug:
+        msg: "Testing on {{ ansible_hostname }} ({{ ansible_distribution }} {{ ansible_distribution_version }})"
+
+    - name: Test debops.apt role
+      ansible.builtin.include_role:
+        name: debops.debops.apt
+      tags: ['apt']
+
+    - name: Test debops.sshd role
+      ansible.builtin.include_role:
+        name: debops.debops.sshd
+      tags: ['sshd']
+
+    - name: Test debops.users role
+      ansible.builtin.include_role:
+        name: debops.debops.users
+      tags: ['users']
+
+    - name: Verify test user was created
+      ansible.builtin.command: id testuser
+      register: testuser_result
+      changed_when: false
+      tags: ['verify']
+
+    - name: Display verification result
+      ansible.builtin.debug:
+        msg: "User created: {{ testuser_result.stdout }}"
+      tags: ['verify']

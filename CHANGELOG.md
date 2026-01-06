@@ -2,14 +2,40 @@
 
 ## Unreleased
 
-### Community Role Evaluation
+### Collection Split (#9)
+
+Reorganized roles into two Ansible collections for better separation of concerns:
+
+**homestak.debian** - Debian-generic roles:
+- `base` - System packages, timezone, locale
+- `users` - User creation with sudo
+- `security` - SSH hardening, fail2ban
+- `iac_tools` - Install packer and tofu (extracted from pve-iac)
+
+**homestak.proxmox** - PVE-specific roles:
+- `install` - Install PVE on Debian 13 (from pve-install)
+- `configure` - PVE config, nag removal (from proxmox)
+- `networking` - Re-IP, rename, DHCP/static, IPv6 (from pve-network)
+- `api_token` - Create pveum API token (extracted from pve-iac)
+- `nested` - E2E testing setup (from nested-pve)
+
+**Breaking Changes:**
+- Playbooks now use FQCN role references (e.g., `homestak.debian.base`)
+- Legacy `roles/` directory deprecated
+- `ansible.cfg` updated with `collections_path`
+
+### Ansible 2.15+ Migration
+
+- Makefile: Install Ansible via pipx (2.15+) instead of apt
+- Required for `deb822_repository` module used by lae.proxmox
+
+### Community Role Evaluation (#8)
 
 - **lae.proxmox v1.10.0**: Successfully tested on Debian 13 Trixie
   - Installs PVE, removes subscription nag, configures repositories
   - Requires Ansible 2.15+ for `deb822_repository` module
-  - See GitHub Issue #8 for adoption plan
+- **DebOps**: Evaluated, not recommended (framework complexity)
 - Add `playbooks/test-lae-proxmox.yml` for community role testing
-- Add `ansible-test` environment in site-config for role validation
 
 ### Phase 5: ConfigResolver Support
 
