@@ -1,52 +1,83 @@
 ---
 # Sync homestak repos to /opt/homestak on nested PVE
 
-- name: Create /opt/homestak directory
+- name: Create /opt/homestak directories
   ansible.builtin.file:
-    path: /opt/homestak
+    path: "{{ item }}"
     state: directory
     mode: '0755'
+  loop:
+    - /opt/homestak
+    - /opt/homestak/site-config
+    - /opt/homestak/tofu
+    - /opt/homestak/packer
+    - /opt/homestak/iac-driver
 
-# Sync site-config (needed for tofu config-loader)
-- name: Sync site-config
-  ansible.posix.synchronize:
-    src: "{{ site_config_src_dir }}/"
+# Sync repos using tar + copy + unarchive (ansible.posix.synchronize not in ansible-core)
+# Creates local tar, copies via ansible, extracts on target
+
+- name: Create local tar of site-config
+  ansible.builtin.shell: >
+    cd {{ site_config_src_dir }} &&
+    tar --exclude='.git' -czf /tmp/homestak-site-config.tar.gz .
+  delegate_to: localhost
+  changed_when: true
+
+- name: Copy and extract site-config
+  ansible.builtin.unarchive:
+    src: /tmp/homestak-site-config.tar.gz
     dest: /opt/homestak/site-config/
-    rsync_opts:
-      - "--exclude=.git"
+    creates: /opt/homestak/site-config/site.yaml
 
-# Sync tofu
-- name: Sync tofu
-  ansible.posix.synchronize:
-    src: "{{ tofu_src_dir }}/"
+- name: Create local tar of tofu
+  ansible.builtin.shell: >
+    cd {{ tofu_src_dir }} &&
+    tar --exclude='.git' --exclude='.terraform' --exclude='terraform.tfstate*' --exclude='.terraform.lock.hcl' --exclude='.states' -czf /tmp/homestak-tofu.tar.gz .
+  delegate_to: localhost
+  changed_when: true
+
+- name: Copy and extract tofu
+  ansible.builtin.unarchive:
+    src: /tmp/homestak-tofu.tar.gz
     dest: /opt/homestak/tofu/
-    rsync_opts:
-      - "--exclude=.git"
-      - "--exclude=.terraform"
-      - "--exclude=terraform.tfstate*"
-      - "--exclude=.terraform.lock.hcl"
+    creates: /opt/homestak/tofu/envs
 
-# Sync packer (for image building if needed)
-- name: Sync packer
-  ansible.posix.synchronize:
-    src: "{{ packer_src_dir }}/"
+- name: Create local tar of packer
+  ansible.builtin.shell: >
+    cd {{ packer_src_dir }} &&
+    tar --exclude='.git' --exclude='images' --exclude='logs' --exclude='cache' -czf /tmp/homestak-packer.tar.gz .
+  delegate_to: localhost
+  changed_when: true
+
+- name: Copy and extract packer
+  ansible.builtin.unarchive:
+    src: /tmp/homestak-packer.tar.gz
     dest: /opt/homestak/packer/
-    rsync_opts:
-      - "--exclude=.git"
-      - "--exclude=images"
-      - "--exclude=logs"
-      - "--exclude=cache"
+    creates: /opt/homestak/packer/templates
 
-# Sync iac-driver (for ConfigResolver and recursive deployment)
-- name: Sync iac-driver
-  ansible.posix.synchronize:
-    src: "{{ iac_driver_src_dir }}/"
+- name: Create local tar of iac-driver
+  ansible.builtin.shell: >
+    cd {{ iac_driver_src_dir }} &&
+    tar --exclude='.git' --exclude='__pycache__' --exclude='reports' --exclude='.states' -czf /tmp/homestak-iac-driver.tar.gz .
+  delegate_to: localhost
+  changed_when: true
+
+- name: Copy and extract iac-driver
+  ansible.builtin.unarchive:
+    src: /tmp/homestak-iac-driver.tar.gz
     dest: /opt/homestak/iac-driver/
-    rsync_opts:
-      - "--exclude=.git"
-      - "--exclude=__pycache__"
-      - "--exclude=reports"
-      - "--exclude=.states"
+    creates: /opt/homestak/iac-driver/src
+
+- name: Cleanup local tar files
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: absent
+  loop:
+    - /tmp/homestak-site-config.tar.gz
+    - /tmp/homestak-tofu.tar.gz
+    - /tmp/homestak-packer.tar.gz
+    - /tmp/homestak-iac-driver.tar.gz
+  delegate_to: localhost
 
 # Create packer working directories
 - name: Create packer working directories

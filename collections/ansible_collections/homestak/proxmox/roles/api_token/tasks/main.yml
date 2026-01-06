@@ -3,7 +3,7 @@
 
 - name: Check if tofu API token exists
   ansible.builtin.shell: |
-    pveum user token list root@pam --output-format json 2>/dev/null | grep -q '"tokenid" : "tofu"'
+    pveum user token list root@pam --output-format json 2>/dev/null | grep -q '"tokenid":"tofu"'
   register: token_exists
   failed_when: false
   changed_when: false
