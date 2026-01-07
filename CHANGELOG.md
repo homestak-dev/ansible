@@ -1,5 +1,17 @@
 # Changelog
 
+## v0.9 - 2026-01-07
+
+### Features
+
+- Modular pve-install with marker file detection
+  - Detects `/etc/pve-packages-preinstalled` from packer PVE image
+  - Skips package installation if marker present (~17 min time savings)
+
+### Documentation
+
+- Update scenario name: `pve-configure` → `pve-setup`
+
 ## v0.8 - 2026-01-07
 
 ### Bug Fixes
