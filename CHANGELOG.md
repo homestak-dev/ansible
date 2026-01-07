@@ -1,6 +1,6 @@
 # Changelog
 
-## v0.8.0-rc1 - 2026-01-07
+## v0.8 - 2026-01-07
 
 ### Bug Fixes
 
@@ -15,7 +15,7 @@
 - Rename "E2E Testing" section to "Nested PVE Deployments" (more general)
 - Update role and playbook descriptions to use "nested PVE" terminology
 
-## v0.6.0-rc1 - 2026-01-06
+## v0.6 - 2026-01-06
 
 ### Collection Split (#9)
 
@@ -64,7 +64,7 @@ Reorganized roles into two Ansible collections for better separation of concerns
 - Remove `ansible.posix.synchronize` dependency - replace with tar+unarchive pattern for ansible-core compatibility
 - Fix `api_token` role idempotency check (JSON output format)
 
-## v0.5.0-rc1 - 2026-01-04
+## v0.5 - 2026-01-04
 
 Consolidated pre-release with network configuration.
 
@@ -93,7 +93,7 @@ Consolidated pre-release with network configuration.
 - Fix pve-install GPG key download for Debian 13 (use curl instead of get_url)
 - Update docs to reference bootstrap repo and `pve-configure` scenario
 
-## v0.1.0-rc1 - 2026-01-03
+## v0.1 - 2026-01-03
 
 ### Roles
 
