@@ -158,7 +158,7 @@ ansible-playbook -i inventory/remote-dev.yml playbooks/trigger-network.yml \
 ### Local Model (on-host)
 Run directly on the PVE host:
 ```bash
-/opt/homestak/run-local.sh network \
+homestak network \
   -e pve_network_tasks='["reip","reboot"]' \
   -e pve_new_ip=10.0.12.100
 ```
