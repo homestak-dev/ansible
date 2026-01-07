@@ -1,0 +1,19 @@
+---
+# Hostname and /etc/hosts configuration
+
+- name: Set hostname
+  ansible.builtin.hostname:
+    name: "{{ pve_hostname }}"
+
+- name: Configure /etc/hosts with static IP
+  ansible.builtin.lineinfile:
+    path: /etc/hosts
+    regexp: "^{{ pve_ip }}\\s+"
+    line: "{{ pve_ip }} {{ pve_hostname }}{% if pve_domain %}.{{ pve_domain }} {{ pve_hostname }}{% endif %}"
+    state: present
+
+- name: Verify hostname resolves to non-loopback IP
+  ansible.builtin.command: hostname --ip-address
+  register: hostname_ip
+  changed_when: false
+  failed_when: hostname_ip.stdout is search('127.0')
