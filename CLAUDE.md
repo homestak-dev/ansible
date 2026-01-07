@@ -212,12 +212,39 @@ Creates non-privileged sudoer user (local_user variable).
 
 ## E2E Testing
 
-The `homestak.proxmox.nested` role configures inner PVE for E2E tests:
-- `network.yml` - Configure vmbr0 bridge for VM networking
-- `ssh-keys.yml` - Copy SSH keys for nested VM access
-- `copy-files.yml` - Sync homestak repos, enable snippets, fix SSL certs
+The `nested-pve` role (in `roles/`, not collections) configures inner PVE for E2E tests:
+
+| Task File | Purpose |
+|-----------|---------|
+| `network.yml` | Configure vmbr0 bridge for VM networking |
+| `ssh-keys.yml` | Copy SSH private key for inner PVE → test VM access |
+| `copy-files.yml` | Sync homestak repos, create API token, inject outer host key |
 
 Dependencies: `homestak.debian.iac_tools`, `homestak.proxmox.api_token`
+
+### SSH Key Flow
+
+E2E testing requires SSH access at multiple levels:
+
+```
+Outer Host (father)
+    │
+    ├── SSH (outer host key) ──→ Inner PVE (10.0.12.x)
+    │                               │
+    │                               └── SSH (copied key) ──→ Test VM (10.0.12.y)
+    │
+    └── SSH Jump Chain (-J) ──────────────────────────────→ Test VM
+```
+
+**Key injection (copy-files.yml):**
+1. `ssh-keys.yml` copies outer host's private key to inner PVE (`~/.ssh/id_rsa`)
+2. `copy-files.yml` reads outer host's public key and injects it into inner PVE's `site-config/secrets.yaml` as `ssh_keys.outer_host`
+3. When test VM is created, ConfigResolver includes this key in cloud-init
+4. SSH jump chain (`ssh -J inner_pve test_vm`) now works because outer host's key is authorized on test VM
+
+This enables both:
+- Direct SSH: outer → inner (for ansible)
+- Jump chain: outer → inner → test (for verification)
 
 See `../iac-driver/CLAUDE.md` for full E2E procedure and architecture.
 
