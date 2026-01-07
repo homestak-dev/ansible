@@ -6,10 +6,10 @@ Ansible playbooks for configuring fresh Proxmox VE installations and installing 
 
 ```bash
 # Post-install configuration (local via iac-driver)
-cd ../iac-driver && ./run.sh --scenario pve-configure --local
+cd ../iac-driver && ./run.sh --scenario pve-setup --local
 
 # Post-install configuration (remote via iac-driver)
-cd ../iac-driver && ./run.sh --scenario pve-configure --remote <IP>
+cd ../iac-driver && ./run.sh --scenario pve-setup --remote <IP>
 
 # Or run playbooks directly:
 ansible-playbook -i inventory/local.yml playbooks/pve-setup.yml
