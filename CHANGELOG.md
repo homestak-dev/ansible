@@ -1,5 +1,20 @@
 # Changelog
 
+## v0.8.0-rc1 - 2026-01-07
+
+### Bug Fixes
+
+- Fix SSH jump chain verification for nested-pve scenarios (iac-driver#21)
+  - Inject outer host's public key into inner PVE's `secrets.yaml`
+  - Enables `ssh -J inner_pve test_vm` from outer host
+  - Key flows: outer → inner (direct), outer → inner → test (jump chain)
+
+### Documentation
+
+- Add SSH Key Flow section to CLAUDE.md explaining nested PVE access patterns
+- Rename "E2E Testing" section to "Nested PVE Deployments" (more general)
+- Update role and playbook descriptions to use "nested PVE" terminology
+
 ## v0.6.0-rc1 - 2026-01-06
 
 ### Collection Split (#9)
