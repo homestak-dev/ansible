@@ -138,3 +138,19 @@
     regexp: '^(\s*)nested-pve:.*$'
     line: '    nested-pve: {{ pve_api_token }}'
   when: pve_api_token is defined
+
+# Inject outer host's SSH key for jump chain verification
+# This enables SSH from outer PVE through inner PVE to test VMs
+- name: Read outer host public key
+  ansible.builtin.slurp:
+    src: ~/.ssh/id_rsa.pub
+  delegate_to: localhost
+  register: outer_host_pubkey
+
+- name: Inject outer host key into secrets.yaml ssh_keys
+  ansible.builtin.lineinfile:
+    path: /opt/homestak/site-config/secrets.yaml
+    regexp: '^(\s*)outer_host:.*$'
+    insertafter: '^ssh_keys:'
+    line: '    outer_host: {{ outer_host_pubkey.content | b64decode | trim }}'
+  when: outer_host_pubkey.content is defined

@@ -58,10 +58,10 @@ ansible/
 │   ├── pve-network.yml   # Network config (re-IP, rename, IPv6)
 │   ├── trigger-network.yml # Push-triggers-pull for network changes
 │   ├── pve-iac-setup.yml # Install IaC tools (packer, tofu)
-│   ├── nested-pve-setup.yml  # E2E test: configure inner PVE
+│   ├── nested-pve-setup.yml  # Configure inner PVE for nested deployment
 │   └── user.yml          # User management only
 └── roles/
-    ├── nested-pve/       # E2E testing (not in collections)
+    ├── nested-pve/       # Nested PVE configuration (not in collections)
     └── ...               # Legacy roles (deprecated, use collections)
 ```
 
@@ -95,7 +95,7 @@ PVE-specific roles (depend on `homestak.debian`):
 
 | Role | Purpose |
 |------|---------|
-| `nested-pve` | E2E testing: bridge, SSH keys, copy files |
+| `nested-pve` | Nested PVE configuration: bridge, SSH keys, copy files |
 
 ### Role References (FQCN)
 
@@ -210,16 +210,43 @@ Post-install configuration for existing PVE hosts:
 ### user.yml
 Creates non-privileged sudoer user (local_user variable).
 
-## E2E Testing
+## Nested PVE Deployments
 
-The `homestak.proxmox.nested` role configures inner PVE for E2E tests:
-- `network.yml` - Configure vmbr0 bridge for VM networking
-- `ssh-keys.yml` - Copy SSH keys for nested VM access
-- `copy-files.yml` - Sync homestak repos, enable snippets, fix SSL certs
+The `nested-pve` role (in `roles/`, not collections) configures inner PVE instances:
+
+| Task File | Purpose |
+|-----------|---------|
+| `network.yml` | Configure vmbr0 bridge for VM networking |
+| `ssh-keys.yml` | Copy SSH private key for inner PVE → test VM access |
+| `copy-files.yml` | Sync homestak repos, create API token, inject outer host key |
 
 Dependencies: `homestak.debian.iac_tools`, `homestak.proxmox.api_token`
 
-See `../iac-driver/CLAUDE.md` for full E2E procedure and architecture.
+### SSH Key Flow
+
+Nested PVE scenarios require SSH access at multiple levels:
+
+```
+Outer Host (father)
+    │
+    ├── SSH (outer host key) ──→ Inner PVE (10.0.12.x)
+    │                               │
+    │                               └── SSH (copied key) ──→ Test VM (10.0.12.y)
+    │
+    └── SSH Jump Chain (-J) ──────────────────────────────→ Test VM
+```
+
+**Key injection (copy-files.yml):**
+1. `ssh-keys.yml` copies outer host's private key to inner PVE (`~/.ssh/id_rsa`)
+2. `copy-files.yml` reads outer host's public key and injects it into inner PVE's `site-config/secrets.yaml` as `ssh_keys.outer_host`
+3. When test VM is created, ConfigResolver includes this key in cloud-init
+4. SSH jump chain (`ssh -J inner_pve test_vm`) now works because outer host's key is authorized on test VM
+
+This enables both:
+- Direct SSH: outer → inner (for ansible)
+- Jump chain: outer → inner → test (for verification)
+
+See `../iac-driver/CLAUDE.md` for nested PVE scenario details and architecture.
 
 ## Community Roles
 
