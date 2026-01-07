@@ -1,0 +1,69 @@
+---
+# Full Proxmox VE installation from fresh Debian 13
+# Used when PVE packages are NOT pre-installed
+
+- name: Download Proxmox GPG key
+  ansible.builtin.shell: |
+    curl -fsSL -o /usr/share/keyrings/proxmox-archive-keyring-trixie.gpg "{{ pve_gpg_key_url }}"
+    chmod 644 /usr/share/keyrings/proxmox-archive-keyring-trixie.gpg
+  args:
+    creates: /usr/share/keyrings/proxmox-archive-keyring-trixie.gpg
+
+- name: Add Proxmox VE repository
+  ansible.builtin.template:
+    src: pve-install-repo.sources.j2
+    dest: /etc/apt/sources.list.d/pve-install-repo.sources
+    mode: "0644"
+
+- name: Update apt cache
+  ansible.builtin.apt:
+    update_cache: true
+
+- name: Full system upgrade
+  ansible.builtin.apt:
+    upgrade: full
+    autoremove: true
+
+- name: Get root filesystem device
+  ansible.builtin.shell: |
+    set -o pipefail
+    findmnt -n -o SOURCE / | sed 's/[0-9]*$//'
+  args:
+    executable: /bin/bash
+  register: root_device
+  changed_when: false
+
+- name: Pre-configure grub-pc install devices
+  ansible.builtin.debconf:
+    name: grub-pc
+    question: grub-pc/install_devices
+    value: "{{ root_device.stdout }}"
+    vtype: string
+
+- name: Install Proxmox kernel
+  ansible.builtin.apt:
+    name: proxmox-default-kernel
+    state: present
+  notify: Reboot for new kernel
+
+- name: Flush handlers to reboot now
+  ansible.builtin.meta: flush_handlers
+
+- name: Wait for system to come back after reboot
+  ansible.builtin.wait_for_connection:
+    delay: 30
+    timeout: "{{ reboot_timeout }}"
+
+- name: Preseed postfix configuration
+  ansible.builtin.debconf:
+    name: postfix
+    question: postfix/main_mailer_type
+    value: "Local only"
+    vtype: select
+
+- name: Install Proxmox VE packages
+  ansible.builtin.apt:
+    name: "{{ pve_packages }}"
+    state: present
+  environment:
+    DEBIAN_FRONTEND: noninteractive
