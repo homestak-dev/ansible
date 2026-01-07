@@ -63,7 +63,7 @@ collections/
                 ├── networking/   # Re-IP, rename, bridges
                 └── api_token/    # pveum API token
 roles/
-└── nested-pve/           # E2E testing (not in collections)
+└── nested-pve/           # Integration testing (not in collections)
 playbooks/
 ├── pve-setup.yml   # Core PVE config
 ├── pve-install.yml # Install PVE on Debian
@@ -93,7 +93,13 @@ roles:
 
 ## Documentation
 
-See [CLAUDE.md](CLAUDE.md) for detailed playbook information and E2E testing roles.
+See [CLAUDE.md](CLAUDE.md) for detailed playbook information and integration testing roles.
+
+## Third-Party Acknowledgments
+
+| Dependency | Purpose | License |
+|------------|---------|---------|
+| [lae.proxmox](https://github.com/lae/ansible-role-proxmox) | Proxmox VE installation on Debian | MIT |
 
 ## Related Repos
 
