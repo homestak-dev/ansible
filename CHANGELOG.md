@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.11 - 2026-01-08
+
+- Release alignment with iac-driver v0.11
+
 ## v0.10 - 2026-01-08
 
 ### Documentation
