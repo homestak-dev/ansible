@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.12 - 2025-01-09
+
+- Release alignment with homestak-dev v0.12
+
 ## v0.11 - 2026-01-08
 
 - Release alignment with iac-driver v0.11
