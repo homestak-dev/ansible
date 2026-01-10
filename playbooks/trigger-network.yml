@@ -38,12 +38,18 @@
         path: "{{ homestak_dir }}/run-local.sh"
       register: bootstrap_check
 
-    - name: Bootstrap homestak if needed
-      ansible.builtin.shell: |
-        curl -fsSL https://raw.githubusercontent.com/homestak-dev/ansible/master/homestak-bootstrap.sh | bash
+    - name: Download bootstrap script
+      ansible.builtin.get_url:
+        url: https://raw.githubusercontent.com/homestak-dev/ansible/master/homestak-bootstrap.sh
+        dest: /tmp/homestak-bootstrap.sh
+        mode: '0755'
       when: not bootstrap_check.stat.exists
-      args:
-        executable: /bin/bash
+
+    - name: Run bootstrap script
+      ansible.builtin.command:
+        cmd: /tmp/homestak-bootstrap.sh
+      when: not bootstrap_check.stat.exists
+      changed_when: true
 
     - name: Write network vars to target
       ansible.builtin.copy:
@@ -76,11 +82,14 @@
         mode: '0755'
 
     - name: Trigger local execution (async)
-      ansible.builtin.shell: |
-        nohup /tmp/network-trigger.sh &
-        sleep 2
+      ansible.builtin.shell:
+        cmd: |
+          nohup /tmp/network-trigger.sh &
+          sleep 2
+        executable: /bin/bash
       async: 10
       poll: 0
+      changed_when: true
 
     - name: Wait for host to go down (if reboot requested)
       ansible.builtin.wait_for:
@@ -110,10 +119,13 @@
       when: "'reboot' in pve_network_tasks"
 
     - name: Verify result
-      ansible.builtin.shell: |
-        ssh -o StrictHostKeyChecking=accept-new -o ConnectTimeout=10 \
-          {{ ansible_user }}@{{ expected_ip }} \
-          "hostname && ip -4 addr show {{ pve_network_interface | default('vmbr0') }} | grep inet"
+      ansible.builtin.shell:
+        cmd: |
+          set -o pipefail
+          ssh -o StrictHostKeyChecking=accept-new -o ConnectTimeout=10 \
+            {{ ansible_user }}@{{ expected_ip }} \
+            "hostname && ip -4 addr show {{ pve_network_interface | default('vmbr0') }} | grep inet"
+        executable: /bin/bash
       register: verify_result
       delegate_to: localhost
       become: false
