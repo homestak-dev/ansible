@@ -1,5 +1,38 @@
 # Changelog
 
+## v0.13 - 2026-01-10
+
+### Features
+
+- Site-config consolidation: configuration now flows from site-config
+  - `group_vars/all.yml` provides fallback defaults for standalone execution
+  - When run via iac-driver, resolved vars from site-config take precedence
+
+### Changes
+
+- Simplify `inventory/group_vars/`:
+  - Remove `dev.yml`, `prod.yml`, `local.yml` (replaced by site-config postures)
+  - Rewrite `all.yml` as standalone fallbacks
+- Add `pve_remove_subscription_nag` variable to configure role
+
+### Code Quality
+
+- Fix all ansible-lint violations (209 → 0)
+- Add `.ansible-lint` configuration:
+  - Exclude legacy `roles/` directory
+  - Skip `var-naming[no-role-prefix]` (we use collection-level prefixes)
+- Enable strict lint enforcement in CI (remove `continue-on-error`)
+- Add `meta/runtime.yml` to both collections
+- Add `CHANGELOG.md` to both collections
+- Replace `curl` with `get_url` module throughout
+- Add `pipefail` to all shell tasks with pipes
+- Replace `ignore_errors` with `failed_when` where appropriate
+
+### Documentation
+
+- Update CLAUDE.md with site-config configuration flow
+- Document variable precedence order
+
 ## v0.12 - 2025-01-09
 
 - Release alignment with homestak-dev v0.12
