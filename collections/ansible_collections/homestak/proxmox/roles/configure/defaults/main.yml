@@ -1,0 +1,6 @@
+---
+# Defaults for homestak.proxmox.configure role
+
+# Remove Proxmox VE subscription nag popup
+# Set to true to disable the subscription reminder on login
+pve_remove_subscription_nag: false

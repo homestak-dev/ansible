@@ -48,10 +48,7 @@ ansible/
 │   ├── remote-dev.yml    # SSH to dev hosts (requires -e ansible_host=<IP>)
 │   ├── remote-prod.yml   # SSH to prod hosts
 │   └── group_vars/
-│       ├── all.yml       # Common vars (local_user: sysadm)
-│       ├── local.yml     # Permissive SSH, sudo_nopasswd: true
-│       ├── dev.yml       # Dev tools, sudo_nopasswd: true
-│       └── prod.yml      # Strict SSH, fail2ban, sudo_nopasswd: false
+│       └── all.yml       # Fallback defaults for standalone execution
 ├── playbooks/
 │   ├── pve-setup.yml     # Core PVE config
 │   ├── pve-install.yml   # Install PVE on Debian 13 Trixie
@@ -163,12 +160,28 @@ homestak network \
   -e pve_new_ip=10.0.12.100
 ```
 
+## Configuration Source (v0.13+)
+
+When run via iac-driver, configuration comes from site-config:
+- `site-config/site.yaml` - Site defaults (timezone, packages, pve settings)
+- `site-config/postures/{name}.yaml` - Security posture (SSH, sudo, fail2ban)
+- `site-config/secrets.yaml` - SSH keys for authorized_keys
+
+When run standalone, `group_vars/all.yml` provides safe fallback defaults.
+
+**Variable precedence:** site-config resolved vars > extra_vars > group_vars/all.yml
+
 ## Key Variables
 
 | Variable | Default | Description |
 |----------|---------|-------------|
-| `local_user` | sysadm | Non-root user to create |
-| `sudo_nopasswd` | varies | Passwordless sudo (true for local/dev) |
+| `timezone` | UTC | System timezone (site-config: America/Denver) |
+| `packages` | minimal | Packages to install (site-config: full list) |
+| `ssh_permit_root_login` | prohibit-password | Root SSH policy (posture-dependent) |
+| `sudo_nopasswd` | false | Passwordless sudo (true for dev posture) |
+| `fail2ban_enabled` | false | Enable fail2ban (true for prod posture) |
+| `pve_remove_subscription_nag` | true | Remove PVE subscription popup |
+| `local_user` | (none) | Non-root user to create (pass via -e) |
 | `ansible_host` | - | Required for remote inventories |
 | `pve_hostname` | - | Required for pve-install playbook |
 

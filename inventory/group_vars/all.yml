@@ -1,29 +1,31 @@
 ---
-# Common variables for all environments
+# Fallback defaults for standalone ansible execution.
+# When run via iac-driver, these are overridden by site-config resolved vars.
 
-# User configuration
-local_user: sysadm
-local_user_shell: /bin/bash
+# System
+timezone: UTC  # Safe fallback; site-config has real timezone
 
-# Timezone
-timezone: UTC
-
-# Common packages to install
-common_packages:
+# Packages (minimal set for standalone)
+packages:
   - htop
   - curl
   - wget
   - git
   - vim
-  - tmux
-  - tree
-  - jq
-  - rsync
 
-# SSH configuration
+# SSH (secure defaults)
 ssh_port: 22
 ssh_permit_root_login: "prohibit-password"
 ssh_password_authentication: "no"
 
-# Proxmox settings
+# Sudo (secure default - require password)
+sudo_nopasswd: false
+
+# Security services (disabled by default)
+fail2ban_enabled: false
+
+# Proxmox
 pve_remove_subscription_nag: true
+
+# Note: local_user is NOT defined here.
+# Pass explicitly when running user.yml: -e local_user=myuser
