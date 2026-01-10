@@ -22,5 +22,3 @@ jobs:
 
       - name: Run ansible-lint
         run: ansible-lint --profile production playbooks/ collections/
-        continue-on-error: true
-        # continue-on-error: Phase 1 reports issues without failing builds

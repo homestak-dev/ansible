@@ -1,0 +1,19 @@
+# Ansible-lint configuration
+# https://ansible.readthedocs.io/projects/lint/configuring/
+
+exclude_paths:
+  # Legacy roles (not in collections, to be deprecated)
+  - roles/
+  # Third-party roles installed via ansible-galaxy
+  - roles/lae.proxmox/
+  # Test playbooks for third-party roles (not installed in CI)
+  - playbooks/test-lae-proxmox.yml
+
+# Warn-only rules (don't fail CI)
+warn_list:
+  - experimental
+
+# Skip rules globally
+skip_list:
+  # We use collection-level prefixes (pve_, api_token_) not role-level
+  - var-naming[no-role-prefix]

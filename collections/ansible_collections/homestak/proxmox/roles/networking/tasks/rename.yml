@@ -15,8 +15,11 @@
   changed_when: false
 
 - name: Get current IP from /etc/hosts
-  ansible.builtin.shell: |
-    grep -E '^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+\s+.*{{ current_hostname.stdout }}' /etc/hosts | awk '{print $1}' | head -1
+  ansible.builtin.shell:
+    cmd: |
+      set -o pipefail
+      grep -E '^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+\s+.*{{ current_hostname.stdout }}' /etc/hosts | awk '{print $1}' | head -1
+    executable: /bin/bash
   register: current_ip
   changed_when: false
 
