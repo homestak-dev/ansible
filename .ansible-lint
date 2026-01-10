@@ -11,6 +11,7 @@ exclude_paths:
 warn_list:
   - experimental
 
-# Skip rules globally (use sparingly)
-# skip_list:
-#   - name[casing]
+# Skip rules globally
+skip_list:
+  # We use collection-level prefixes (pve_, api_token_) not role-level
+  - var-naming[no-role-prefix]
