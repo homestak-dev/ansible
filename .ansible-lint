@@ -6,6 +6,8 @@ exclude_paths:
   - roles/
   # Third-party roles installed via ansible-galaxy
   - roles/lae.proxmox/
+  # Test playbooks for third-party roles (not installed in CI)
+  - playbooks/test-lae-proxmox.yml
 
 # Warn-only rules (don't fail CI)
 warn_list:
