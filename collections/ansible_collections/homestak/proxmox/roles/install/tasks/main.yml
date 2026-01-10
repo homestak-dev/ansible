@@ -27,11 +27,11 @@
   failed_when: hostname_ip.stdout is search('127.0')
 
 - name: Download Proxmox GPG key
-  ansible.builtin.shell: |
-    curl -fsSL -o /usr/share/keyrings/proxmox-archive-keyring-trixie.gpg "{{ pve_gpg_key_url }}"
-    chmod 644 /usr/share/keyrings/proxmox-archive-keyring-trixie.gpg
-  args:
-    creates: /usr/share/keyrings/proxmox-archive-keyring-trixie.gpg
+  ansible.builtin.get_url:
+    url: "{{ pve_gpg_key_url }}"
+    dest: /usr/share/keyrings/proxmox-archive-keyring-trixie.gpg
+    mode: '0644'
+    checksum: "{{ pve_gpg_key_checksum }}"
 
 - name: Add Proxmox VE repository
   ansible.builtin.template:
@@ -97,7 +97,7 @@
     name: "{{ debian_kernel_packages }}"
     state: absent
     purge: true
-  ignore_errors: true
+  failed_when: false  # Packages may already be removed
 
 - name: Remove os-prober
   ansible.builtin.apt:

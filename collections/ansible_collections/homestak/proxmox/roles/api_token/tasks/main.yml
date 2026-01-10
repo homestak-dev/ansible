@@ -18,12 +18,12 @@
   when: api_token_check.rc != 0
   changed_when: api_token_create.rc == 0
 
-- name: Parse and save token
+- name: Parse and save token  # noqa: no-handler
   ansible.builtin.set_fact:
     api_token_value: "{{ (api_token_create.stdout | from_json)['full-tokenid'] }}={{ (api_token_create.stdout | from_json).value }}"
   when: api_token_create is changed
 
-- name: Display token for manual use
+- name: Display token for manual use  # noqa: no-handler
   ansible.builtin.debug:
     msg: |
       API token created: {{ api_token_value }}

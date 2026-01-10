@@ -11,8 +11,11 @@
     fail_msg: "pve_new_ip and pve_new_gateway are required for static task"
 
 - name: Detect current bridge-ports for interface
-  ansible.builtin.shell: |
-    grep -A10 "iface {{ pve_network_interface }}" /etc/network/interfaces | grep -m1 bridge-ports | awk '{print $2}'
+  ansible.builtin.shell:
+    cmd: |
+      set -o pipefail
+      grep -A10 "iface {{ pve_network_interface }}" /etc/network/interfaces | grep -m1 bridge-ports | awk '{print $2}'
+    executable: /bin/bash
   register: detected_bridge_ports
   changed_when: false
   failed_when: false

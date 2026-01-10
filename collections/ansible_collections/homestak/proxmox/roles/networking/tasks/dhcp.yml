@@ -4,8 +4,11 @@
 # Multi-NIC safe: auto-detects bridge-ports from existing config
 
 - name: Detect current bridge-ports for interface
-  ansible.builtin.shell: |
-    grep -A10 "iface {{ pve_network_interface }}" /etc/network/interfaces | grep -m1 bridge-ports | awk '{print $2}'
+  ansible.builtin.shell:
+    cmd: |
+      set -o pipefail
+      grep -A10 "iface {{ pve_network_interface }}" /etc/network/interfaces | grep -m1 bridge-ports | awk '{print $2}'
+    executable: /bin/bash
   register: detected_bridge_ports
   changed_when: false
   failed_when: false

@@ -8,10 +8,13 @@
     reconnect_ip: "{{ pve_new_ip if (pve_new_ip is defined and pve_new_ip | length > 0) else ansible_host }}"
 
 - name: Trigger reboot (async)
-  ansible.builtin.shell: sleep 2 && /sbin/reboot &
+  ansible.builtin.shell:
+    cmd: sleep 2 && /sbin/reboot &
+    executable: /bin/bash
   async: 1
   poll: 0
-  ignore_errors: true
+  failed_when: false
+  changed_when: true
 
 - name: Wait for host to go down
   ansible.builtin.wait_for:
@@ -38,15 +41,21 @@
     seconds: 5
 
 - name: Cleanup old PVE node config (if renamed)
-  ansible.builtin.shell: |
-    ssh -o StrictHostKeyChecking=accept-new {{ ansible_user }}@{{ reconnect_ip }} "rm -rf /etc/pve/nodes/{{ pve_old_hostname }}"
+  ansible.builtin.shell:
+    cmd: |
+      ssh -o StrictHostKeyChecking=accept-new {{ ansible_user }}@{{ reconnect_ip }} "rm -rf /etc/pve/nodes/{{ pve_old_hostname }}"
+    executable: /bin/bash
   delegate_to: localhost
   become: false
+  changed_when: true
   when: pve_old_hostname is defined
 
 - name: Verify hostname and IP
-  ansible.builtin.shell: |
-    ssh -o StrictHostKeyChecking=accept-new {{ ansible_user }}@{{ reconnect_ip }} "hostname -s && ip -4 addr show {{ pve_network_interface }} | grep inet"
+  ansible.builtin.shell:
+    cmd: |
+      set -o pipefail
+      ssh -o StrictHostKeyChecking=accept-new {{ ansible_user }}@{{ reconnect_ip }} "hostname -s && ip -4 addr show {{ pve_network_interface }} | grep inet"
+    executable: /bin/bash
   register: verify_result
   changed_when: false
   delegate_to: localhost
