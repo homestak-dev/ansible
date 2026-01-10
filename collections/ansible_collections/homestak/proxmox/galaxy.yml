@@ -8,10 +8,11 @@ authors:
 description: Proxmox VE installation and configuration roles
 license_file: LICENSE
 tags:
+  - infrastructure
+  - linux
   - proxmox
   - pve
   - virtualization
-  - hypervisor
 repository: https://github.com/homestak-dev/ansible
 documentation: https://github.com/homestak-dev/ansible
 homepage: https://github.com/homestak-dev

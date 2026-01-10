@@ -2,34 +2,38 @@
 # Create API token for tofu on Proxmox VE
 
 - name: Check if tofu API token exists
-  ansible.builtin.shell: |
-    pveum user token list root@pam --output-format json 2>/dev/null | grep -q '"tokenid":"tofu"'
-  register: token_exists
+  ansible.builtin.shell:
+    cmd: |
+      set -o pipefail
+      pveum user token list root@pam --output-format json 2>/dev/null | grep -q '"tokenid":"tofu"'
+    executable: /bin/bash
+  register: api_token_check
   failed_when: false
   changed_when: false
 
 - name: Create tofu API token
-  ansible.builtin.shell: |
-    pveum user token add root@pam tofu --privsep 0 --output-format json
-  register: token_result
-  when: token_exists.rc != 0
+  ansible.builtin.command:
+    cmd: pveum user token add root@pam tofu --privsep 0 --output-format json
+  register: api_token_create
+  when: api_token_check.rc != 0
+  changed_when: api_token_create.rc == 0
 
 - name: Parse and save token
   ansible.builtin.set_fact:
-    pve_api_token: "{{ (token_result.stdout | from_json)['full-tokenid'] }}={{ (token_result.stdout | from_json).value }}"
-  when: token_result is changed
+    api_token_value: "{{ (api_token_create.stdout | from_json)['full-tokenid'] }}={{ (api_token_create.stdout | from_json).value }}"
+  when: api_token_create is changed
 
 - name: Display token for manual use
   ansible.builtin.debug:
     msg: |
-      API token created: {{ pve_api_token }}
+      API token created: {{ api_token_value }}
 
       For terraform.tfvars:
       proxmox_api_endpoint = "https://{{ ansible_host }}:8006"
-      proxmox_api_token    = "{{ pve_api_token }}"
-  when: token_result is changed
+      proxmox_api_token    = "{{ api_token_value }}"
+  when: api_token_create is changed
 
 - name: Token already exists notice
   ansible.builtin.debug:
     msg: "API token 'tofu' already exists for root@pam"
-  when: token_exists.rc == 0
+  when: api_token_check.rc == 0

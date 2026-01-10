@@ -12,10 +12,15 @@
     update_cache: true
 
 # Packer installation
-- name: Add HashiCorp GPG key
-  ansible.builtin.shell: |
-    curl -fsSL https://apt.releases.hashicorp.com/gpg | gpg --dearmor -o /usr/share/keyrings/hashicorp-archive-keyring.gpg
-  args:
+- name: Download HashiCorp GPG key
+  ansible.builtin.get_url:
+    url: https://apt.releases.hashicorp.com/gpg
+    dest: /tmp/hashicorp.gpg.asc
+    mode: '0644'
+
+- name: Dearmor HashiCorp GPG key
+  ansible.builtin.shell:
+    cmd: gpg --dearmor -o /usr/share/keyrings/hashicorp-archive-keyring.gpg < /tmp/hashicorp.gpg.asc
     creates: /usr/share/keyrings/hashicorp-archive-keyring.gpg
 
 - name: Add HashiCorp repository
@@ -37,12 +42,22 @@
     state: directory
     mode: '0755'
 
-- name: Add OpenTofu GPG key
-  ansible.builtin.shell: |
-    curl -fsSL https://get.opentofu.org/opentofu.gpg | tee /etc/apt/keyrings/opentofu.gpg > /dev/null
-    curl -fsSL https://packages.opentofu.org/opentofu/tofu/gpgkey | gpg --no-tty --batch --dearmor -o /etc/apt/keyrings/opentofu-repo.gpg 2>/dev/null || true
-  args:
-    creates: /etc/apt/keyrings/opentofu.gpg
+- name: Download OpenTofu GPG key
+  ansible.builtin.get_url:
+    url: https://get.opentofu.org/opentofu.gpg
+    dest: /etc/apt/keyrings/opentofu.gpg
+    mode: '0644'
+
+- name: Download OpenTofu repo GPG key
+  ansible.builtin.get_url:
+    url: https://packages.opentofu.org/opentofu/tofu/gpgkey
+    dest: /tmp/opentofu-repo.gpg.asc
+    mode: '0644'
+
+- name: Dearmor OpenTofu repo GPG key
+  ansible.builtin.shell:
+    cmd: gpg --no-tty --batch --dearmor -o /etc/apt/keyrings/opentofu-repo.gpg < /tmp/opentofu-repo.gpg.asc
+    creates: /etc/apt/keyrings/opentofu-repo.gpg
 
 - name: Add OpenTofu repository
   ansible.builtin.apt_repository:
