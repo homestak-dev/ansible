@@ -2,6 +2,14 @@
 
 ## [Unreleased]
 
+### Changed
+
+- nested-pve role now uses bootstrap installer by default (#13)
+  - Production mode: Clone repos from GitHub via bootstrap/install.sh
+  - Dev mode: Sync local repos via tar/unarchive (`bootstrap_use_local: true`)
+  - site-config always synced separately (contains encrypted secrets)
+  - New variables: `bootstrap_branch`, `bootstrap_use_local`, `bootstrap_url`
+
 ### Fixed
 
 - Update nested-pve role packer init for per-template directory structure

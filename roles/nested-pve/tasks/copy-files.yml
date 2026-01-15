@@ -1,20 +1,150 @@
 ---
-# Sync homestak repos to /opt/homestak on nested PVE
+# Setup homestak on nested PVE
+# Two modes:
+# - Production (bootstrap_use_local: false): Clone repos from GitHub via bootstrap
+# - Dev (bootstrap_use_local: true): Sync local repos via tar/unarchive
 
-- name: Create /opt/homestak directories
+# ============================================================================
+# Common: Create base directories
+# ============================================================================
+
+- name: Create /opt/homestak directory
   ansible.builtin.file:
-    path: "{{ item }}"
+    path: /opt/homestak
     state: directory
     mode: '0755'
-  loop:
-    - /opt/homestak
-    - /opt/homestak/site-config
-    - /opt/homestak/tofu
-    - /opt/homestak/packer
-    - /opt/homestak/iac-driver
 
-# Sync repos using tar + copy + unarchive (ansible.posix.synchronize not in ansible-core)
-# Creates local tar, copies via ansible, extracts on target
+# ============================================================================
+# Production mode: Use bootstrap installer
+# ============================================================================
+
+- name: Install homestak via bootstrap (production mode)
+  when: not bootstrap_use_local
+  block:
+    - name: Run bootstrap installer
+      ansible.builtin.shell: |
+        curl -fsSL {{ bootstrap_url }} | HOMESTAK_BRANCH={{ bootstrap_branch }} bash
+      args:
+        creates: /opt/homestak/iac-driver/run.sh
+      register: bootstrap_result
+
+    - name: Show bootstrap output
+      ansible.builtin.debug:
+        var: bootstrap_result.stdout_lines
+      when: bootstrap_result.changed
+
+# ============================================================================
+# Dev mode: Sync local repos via tar/unarchive
+# ============================================================================
+
+- name: Sync local repos (dev mode)
+  when: bootstrap_use_local
+  block:
+    - name: Create repo directories
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: directory
+        mode: '0755'
+      loop:
+        - /opt/homestak/tofu
+        - /opt/homestak/packer
+        - /opt/homestak/iac-driver
+        - /opt/homestak/ansible
+        - /opt/homestak/bootstrap
+
+    # Tofu
+    - name: Create local tar of tofu
+      ansible.builtin.shell: >
+        cd {{ tofu_src_dir }} &&
+        tar --exclude='.git' --exclude='.terraform' --exclude='terraform.tfstate*'
+        --exclude='.terraform.lock.hcl' --exclude='.states' -czf /tmp/homestak-tofu.tar.gz .
+      delegate_to: localhost
+      changed_when: true
+
+    - name: Copy and extract tofu
+      ansible.builtin.unarchive:
+        src: /tmp/homestak-tofu.tar.gz
+        dest: /opt/homestak/tofu/
+
+    # Packer
+    - name: Create local tar of packer
+      ansible.builtin.shell: >
+        cd {{ packer_src_dir }} &&
+        tar --exclude='.git' --exclude='images' --exclude='logs' --exclude='cache' -czf /tmp/homestak-packer.tar.gz .
+      delegate_to: localhost
+      changed_when: true
+
+    - name: Copy and extract packer
+      ansible.builtin.unarchive:
+        src: /tmp/homestak-packer.tar.gz
+        dest: /opt/homestak/packer/
+
+    # iac-driver
+    - name: Create local tar of iac-driver
+      ansible.builtin.shell: >
+        cd {{ iac_driver_src_dir }} &&
+        tar --exclude='.git' --exclude='__pycache__' --exclude='reports' --exclude='.states' -czf /tmp/homestak-iac-driver.tar.gz .
+      delegate_to: localhost
+      changed_when: true
+
+    - name: Copy and extract iac-driver
+      ansible.builtin.unarchive:
+        src: /tmp/homestak-iac-driver.tar.gz
+        dest: /opt/homestak/iac-driver/
+
+    # Ansible
+    - name: Create local tar of ansible
+      ansible.builtin.shell: >
+        cd {{ ansible_src_dir }} &&
+        tar --exclude='.git' --exclude='*.retry' -czf /tmp/homestak-ansible.tar.gz .
+      delegate_to: localhost
+      changed_when: true
+
+    - name: Copy and extract ansible
+      ansible.builtin.unarchive:
+        src: /tmp/homestak-ansible.tar.gz
+        dest: /opt/homestak/ansible/
+
+    # Bootstrap (for CLI)
+    - name: Create local tar of bootstrap
+      ansible.builtin.shell: >
+        cd {{ bootstrap_src_dir }} &&
+        tar --exclude='.git' -czf /tmp/homestak-bootstrap.tar.gz .
+      delegate_to: localhost
+      changed_when: true
+
+    - name: Copy and extract bootstrap
+      ansible.builtin.unarchive:
+        src: /tmp/homestak-bootstrap.tar.gz
+        dest: /opt/homestak/bootstrap/
+
+    # Cleanup tar files
+    - name: Cleanup local tar files
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: absent
+      loop:
+        - /tmp/homestak-tofu.tar.gz
+        - /tmp/homestak-packer.tar.gz
+        - /tmp/homestak-iac-driver.tar.gz
+        - /tmp/homestak-ansible.tar.gz
+        - /tmp/homestak-bootstrap.tar.gz
+      delegate_to: localhost
+
+    # Install dependencies (would be done by bootstrap in production)
+    - name: Install IaC tools via ansible role
+      ansible.builtin.include_role:
+        name: homestak.debian.iac_tools
+
+# ============================================================================
+# Always: Sync site-config separately (contains secrets)
+# ============================================================================
+
+- name: Create site-config directory
+  ansible.builtin.file:
+    path: /opt/homestak/site-config
+    state: directory
+    mode: '0755'
 
 - name: Create local tar of site-config
   ansible.builtin.shell: >
@@ -27,59 +157,17 @@
   ansible.builtin.unarchive:
     src: /tmp/homestak-site-config.tar.gz
     dest: /opt/homestak/site-config/
-    creates: /opt/homestak/site-config/site.yaml
 
-- name: Create local tar of tofu
-  ansible.builtin.shell: >
-    cd {{ tofu_src_dir }} &&
-    tar --exclude='.git' --exclude='.terraform' --exclude='terraform.tfstate*' --exclude='.terraform.lock.hcl' --exclude='.states' -czf /tmp/homestak-tofu.tar.gz .
-  delegate_to: localhost
-  changed_when: true
-
-- name: Copy and extract tofu
-  ansible.builtin.unarchive:
-    src: /tmp/homestak-tofu.tar.gz
-    dest: /opt/homestak/tofu/
-    creates: /opt/homestak/tofu/envs
-
-- name: Create local tar of packer
-  ansible.builtin.shell: >
-    cd {{ packer_src_dir }} &&
-    tar --exclude='.git' --exclude='images' --exclude='logs' --exclude='cache' -czf /tmp/homestak-packer.tar.gz .
-  delegate_to: localhost
-  changed_when: true
-
-- name: Copy and extract packer
-  ansible.builtin.unarchive:
-    src: /tmp/homestak-packer.tar.gz
-    dest: /opt/homestak/packer/
-    creates: /opt/homestak/packer/templates
-
-- name: Create local tar of iac-driver
-  ansible.builtin.shell: >
-    cd {{ iac_driver_src_dir }} &&
-    tar --exclude='.git' --exclude='__pycache__' --exclude='reports' --exclude='.states' -czf /tmp/homestak-iac-driver.tar.gz .
-  delegate_to: localhost
-  changed_when: true
-
-- name: Copy and extract iac-driver
-  ansible.builtin.unarchive:
-    src: /tmp/homestak-iac-driver.tar.gz
-    dest: /opt/homestak/iac-driver/
-    creates: /opt/homestak/iac-driver/src
-
-- name: Cleanup local tar files
+- name: Cleanup site-config tar
   ansible.builtin.file:
-    path: "{{ item }}"
+    path: /tmp/homestak-site-config.tar.gz
     state: absent
-  loop:
-    - /tmp/homestak-site-config.tar.gz
-    - /tmp/homestak-tofu.tar.gz
-    - /tmp/homestak-packer.tar.gz
-    - /tmp/homestak-iac-driver.tar.gz
   delegate_to: localhost
 
-# Create packer working directories
+# ============================================================================
+# Common: Packer setup (both modes)
+# ============================================================================
+
 - name: Create packer working directories
   ansible.builtin.file:
     path: "{{ item }}"
@@ -90,7 +178,6 @@
     - /opt/homestak/packer/logs
     - /opt/homestak/packer/cache
 
-# Initialize packer plugins (per-template directory structure)
 - name: Initialize packer plugins
   ansible.builtin.shell: |
     cd /opt/homestak/packer
@@ -100,14 +187,16 @@
   args:
     creates: /root/.config/packer/plugins
 
-# Enable snippets on local datastore (required for cloud-init)
+# ============================================================================
+# Common: PVE configuration
+# ============================================================================
+
 - name: Enable snippets content type on local storage
   ansible.builtin.shell: |
     pvesm set local -content images,rootdir,vztmpl,backup,iso,snippets
   changed_when: false
 
-# Fix SSL certificates (IPv6 link-local addresses break cert generation)
-- name: Regenerate PVE SSL certificates
+- name: Regenerate PVE SSL certificates (IPv6 workaround)
   ansible.builtin.shell: |
     sysctl -w net.ipv6.conf.all.disable_ipv6=1
     sysctl -w net.ipv6.conf.default.disable_ipv6=1
@@ -117,8 +206,10 @@
     systemctl restart pveproxy
   changed_when: false
 
-# Create API token on inner PVE for tofu
-# Delete and recreate to ensure we have the token value (only shown at creation)
+# ============================================================================
+# Common: API token and SSH key injection
+# ============================================================================
+
 - name: Delete existing tofu API token (if any)
   ansible.builtin.shell: |
     pveum user token remove root@pam tofu 2>/dev/null || true
@@ -133,7 +224,6 @@
   ansible.builtin.set_fact:
     pve_api_token: "{{ (token_result.stdout | from_json)['full-tokenid'] }}={{ (token_result.stdout | from_json).value }}"
 
-# Update secrets.yaml with the actual API token
 - name: Update secrets.yaml with nested-pve token
   ansible.builtin.lineinfile:
     path: /opt/homestak/site-config/secrets.yaml
@@ -142,7 +232,6 @@
   when: pve_api_token is defined
 
 # Inject outer host's SSH key for jump chain verification
-# This enables SSH from outer PVE through inner PVE to test VMs
 - name: Read outer host public key
   ansible.builtin.slurp:
     src: ~/.ssh/id_rsa.pub

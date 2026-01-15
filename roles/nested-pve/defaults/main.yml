@@ -15,14 +15,19 @@ nested_pve_bridge_address: null
 nested_pve_bridge_netmask: null
 nested_pve_bridge_gateway: null
 
-# Packer source directory on controller
+# Bootstrap configuration
+# Set bootstrap_use_local: true to sync local repos instead of GitHub clone
+bootstrap_use_local: false
+bootstrap_branch: master
+bootstrap_url: "https://raw.githubusercontent.com/homestak-dev/bootstrap/{{ bootstrap_branch }}/install.sh"
+
+# Source directories on controller (used when bootstrap_use_local: true)
 packer_src_dir: /root/homestak/packer
-
-# Tofu source directory on controller
 tofu_src_dir: /root/homestak/tofu
-
-# Site-config source directory on controller
+ansible_src_dir: /root/homestak/ansible
+iac_driver_src_dir: /root/homestak/iac-driver
 site_config_src_dir: /root/homestak/site-config
+bootstrap_src_dir: /root/homestak/bootstrap
 
 # Root password hash for test VMs
 root_password_hash: "{{ lookup('env', 'ROOT_PASSWORD_HASH') | default('') }}"
