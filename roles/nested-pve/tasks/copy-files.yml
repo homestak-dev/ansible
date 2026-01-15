@@ -165,8 +165,13 @@
   delegate_to: localhost
 
 # ============================================================================
-# Common: Packer setup (both modes)
+# Common: Packer setup (both modes, only if packer installed)
 # ============================================================================
+
+- name: Check if packer templates exist
+  ansible.builtin.stat:
+    path: /opt/homestak/packer/templates
+  register: packer_templates
 
 - name: Create packer working directories
   ansible.builtin.file:
@@ -177,6 +182,7 @@
     - /opt/homestak/packer/images
     - /opt/homestak/packer/logs
     - /opt/homestak/packer/cache
+  when: packer_templates.stat.exists
 
 - name: Initialize packer plugins
   ansible.builtin.shell: |
@@ -186,6 +192,7 @@
     done
   args:
     creates: /root/.config/packer/plugins
+  when: packer_templates.stat.exists
 
 # ============================================================================
 # Common: PVE configuration
