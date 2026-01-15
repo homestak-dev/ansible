@@ -90,11 +90,13 @@
     - /opt/homestak/packer/logs
     - /opt/homestak/packer/cache
 
-# Initialize packer plugins
+# Initialize packer plugins (per-template directory structure)
 - name: Initialize packer plugins
   ansible.builtin.shell: |
-    cd /opt/homestak/packer/templates
-    packer init debian-12-custom.pkr.hcl
+    cd /opt/homestak/packer
+    for template in templates/*/template.pkr.hcl; do
+      packer init "$template"
+    done
   args:
     creates: /root/.config/packer/plugins
 
