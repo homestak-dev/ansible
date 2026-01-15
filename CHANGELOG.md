@@ -2,8 +2,20 @@
 
 ## [Unreleased]
 
+### Changed
+
+- nested-pve role now uses bootstrap installer by default (#13)
+  - Production mode: Clone repos from GitHub via bootstrap/install.sh
+  - Dev mode: Sync local repos via tar/unarchive (`bootstrap_use_local: true`)
+  - site-config always synced separately (contains encrypted secrets)
+  - New variable: `homestak_src_dir` (default: `/opt/homestak`) replaces individual `*_src_dir` variables
+  - New variables: `bootstrap_branch`, `bootstrap_use_local`, `bootstrap_url`
+
 ### Fixed
 
+- Make packer setup conditional on packer being installed (#13)
+  - Bootstrap doesn't install packer by default
+  - Packer init now skipped when `/opt/homestak/packer/templates` doesn't exist
 - Update nested-pve role packer init for per-template directory structure
 
 ## v0.18 - 2026-01-13

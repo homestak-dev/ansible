@@ -15,14 +15,15 @@ nested_pve_bridge_address: null
 nested_pve_bridge_netmask: null
 nested_pve_bridge_gateway: null
 
-# Packer source directory on controller
-packer_src_dir: /root/homestak/packer
+# Bootstrap configuration
+# Set bootstrap_use_local: true to sync local repos instead of GitHub clone
+bootstrap_use_local: false
+bootstrap_branch: master
+bootstrap_url: "https://raw.githubusercontent.com/homestak-dev/bootstrap/{{ bootstrap_branch }}/install.sh"
 
-# Tofu source directory on controller
-tofu_src_dir: /root/homestak/tofu
-
-# Site-config source directory on controller
-site_config_src_dir: /root/homestak/site-config
+# Source directory on controller (used when bootstrap_use_local: true)
+# Default matches bootstrap install location; iac-driver overrides for dev workflows
+homestak_src_dir: /opt/homestak
 
 # Root password hash for test VMs
 root_password_hash: "{{ lookup('env', 'ROOT_PASSWORD_HASH') | default('') }}"
