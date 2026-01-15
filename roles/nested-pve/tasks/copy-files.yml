@@ -55,7 +55,7 @@
     # Tofu
     - name: Create local tar of tofu
       ansible.builtin.shell: >
-        cd {{ tofu_src_dir }} &&
+        cd {{ homestak_src_dir }}/tofu &&
         tar --exclude='.git' --exclude='.terraform' --exclude='terraform.tfstate*'
         --exclude='.terraform.lock.hcl' --exclude='.states' -czf /tmp/homestak-tofu.tar.gz .
       delegate_to: localhost
@@ -69,7 +69,7 @@
     # Packer
     - name: Create local tar of packer
       ansible.builtin.shell: >
-        cd {{ packer_src_dir }} &&
+        cd {{ homestak_src_dir }}/packer &&
         tar --exclude='.git' --exclude='images' --exclude='logs' --exclude='cache' -czf /tmp/homestak-packer.tar.gz .
       delegate_to: localhost
       changed_when: true
@@ -82,7 +82,7 @@
     # iac-driver
     - name: Create local tar of iac-driver
       ansible.builtin.shell: >
-        cd {{ iac_driver_src_dir }} &&
+        cd {{ homestak_src_dir }}/iac-driver &&
         tar --exclude='.git' --exclude='__pycache__' --exclude='reports' --exclude='.states' -czf /tmp/homestak-iac-driver.tar.gz .
       delegate_to: localhost
       changed_when: true
@@ -95,7 +95,7 @@
     # Ansible
     - name: Create local tar of ansible
       ansible.builtin.shell: >
-        cd {{ ansible_src_dir }} &&
+        cd {{ homestak_src_dir }}/ansible &&
         tar --exclude='.git' --exclude='*.retry' -czf /tmp/homestak-ansible.tar.gz .
       delegate_to: localhost
       changed_when: true
@@ -108,7 +108,7 @@
     # Bootstrap (for CLI)
     - name: Create local tar of bootstrap
       ansible.builtin.shell: >
-        cd {{ bootstrap_src_dir }} &&
+        cd {{ homestak_src_dir }}/bootstrap &&
         tar --exclude='.git' -czf /tmp/homestak-bootstrap.tar.gz .
       delegate_to: localhost
       changed_when: true
@@ -148,7 +148,7 @@
 
 - name: Create local tar of site-config
   ansible.builtin.shell: >
-    cd {{ site_config_src_dir }} &&
+    cd {{ homestak_src_dir }}/site-config &&
     tar --exclude='.git' -czf /tmp/homestak-site-config.tar.gz .
   delegate_to: localhost
   changed_when: true
