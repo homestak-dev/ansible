@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## v0.22 - 2026-01-15
+
 ### Changed
 
 - nested-pve role now uses bootstrap installer by default (#13)
