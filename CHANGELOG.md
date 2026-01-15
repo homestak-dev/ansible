@@ -1,5 +1,11 @@
 # Changelog
 
+## [Unreleased]
+
+### Fixed
+
+- Update nested-pve role packer init for per-template directory structure
+
 ## v0.18 - 2026-01-13
 
 - Release alignment with homestak v0.18
