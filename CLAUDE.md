@@ -185,6 +185,41 @@ When run standalone, `group_vars/all.yml` provides safe fallback defaults.
 | `ansible_host` | - | Required for remote inventories |
 | `pve_hostname` | - | Required for pve-install playbook |
 
+## Boolean Variables with CLI Extra-Vars
+
+When passing boolean variables via CLI `-e` flag, Ansible receives them as strings, not booleans. This causes conditional checks to fail unexpectedly.
+
+**Problem:**
+```bash
+# CLI passes "true" as a string
+ansible-playbook playbook.yml -e "my_flag=true"
+```
+
+```yaml
+# This conditional may not work as expected
+- name: Do something
+  when: my_flag  # "true" (string) is always truthy, but "false" (string) is also truthy!
+```
+
+**Solution:** Always use the `| bool` filter for variables that might come from extra-vars:
+
+```yaml
+# Correct - handles both boolean and string inputs
+- name: Do something
+  when: my_flag | bool
+
+# For negation
+- name: Do something else
+  when: not (my_flag | bool)
+```
+
+**When to use `| bool`:**
+- Variables passed via `-e` on command line
+- Variables that might be set from different sources (group_vars, extra_vars, defaults)
+- Any boolean variable used in conditionals where CLI usage is possible
+
+This pattern was added after discovering the issue in nested-pve role's `copy-files.yml` during v0.28.
+
 ## Related Projects
 
 Part of the [homestak-dev](https://github.com/homestak-dev) organization:
