@@ -1,0 +1,33 @@
+---
+# Copy SSH keys to nested PVE for VM access
+#
+# Copies the controller's SSH keypair to the nested PVE host,
+# enabling SSH access from nested PVE to test VMs.
+#
+# Usage:
+#   ansible-playbook -i inventory/remote-dev.yml playbooks/nested-pve-ssh.yml \
+#     -e ansible_host=<IP>
+#
+# Prerequisites:
+#   - SSH keypair exists at ~/.ssh/id_rsa on controller
+
+- name: Copy SSH keys for nested access
+  hosts: all
+  gather_facts: true
+  become: true
+
+  pre_tasks:
+    - name: Display target
+      ansible.builtin.debug:
+        msg: "Copying SSH keys to {{ ansible_host }}"
+
+  tasks:
+    - name: Include SSH key copy tasks
+      ansible.builtin.include_role:
+        name: nested-pve
+        tasks_from: ssh-keys.yml
+
+  post_tasks:
+    - name: Display completion message
+      ansible.builtin.debug:
+        msg: "SSH keys copied successfully"

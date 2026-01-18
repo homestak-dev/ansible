@@ -19,7 +19,7 @@
 # ============================================================================
 
 - name: Install homestak via bootstrap (production mode)
-  when: not bootstrap_use_local
+  when: not (bootstrap_use_local | bool)
   block:
     - name: Run bootstrap installer
       ansible.builtin.shell: |
@@ -38,7 +38,7 @@
 # ============================================================================
 
 - name: Sync local repos (dev mode)
-  when: bootstrap_use_local
+  when: bootstrap_use_local | bool
   block:
     - name: Create repo directories
       ansible.builtin.file:
