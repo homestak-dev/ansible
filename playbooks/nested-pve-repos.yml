@@ -1,0 +1,44 @@
+---
+# Sync repos and configure PVE for IaC operations
+#
+# This playbook:
+#   - Syncs homestak repos (via bootstrap or local tar)
+#   - Syncs site-config with secrets
+#   - Configures PVE storage (snippets content type)
+#   - Regenerates SSL certificates (IPv6 workaround)
+#   - Creates API token for tofu
+#   - Injects outer host SSH key for jump chain
+#
+# Usage:
+#   ansible-playbook -i inventory/remote-dev.yml playbooks/nested-pve-repos.yml \
+#     -e ansible_host=<IP>
+#
+# Variables:
+#   bootstrap_use_local: false  # true to sync local repos instead of GitHub
+#   bootstrap_branch: master    # branch for GitHub clone
+#   homestak_src_dir: /opt/homestak  # source dir when bootstrap_use_local=true
+
+- name: Sync repos and configure PVE for IaC
+  hosts: all
+  gather_facts: true
+  become: true
+
+  pre_tasks:
+    - name: Display target and mode
+      ansible.builtin.debug:
+        msg: "Syncing repos to {{ ansible_host }} (local_mode={{ bootstrap_use_local | default(false) }})"
+
+  tasks:
+    - name: Include file copy and PVE config tasks
+      ansible.builtin.include_role:
+        name: nested-pve
+        tasks_from: copy-files.yml
+
+  post_tasks:
+    - name: Display completion message
+      ansible.builtin.debug:
+        msg: |
+          Repo sync and PVE configuration complete!
+
+          Homestak repos synced to /opt/homestak/
+          API token created and injected into site-config
