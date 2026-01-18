@@ -1,5 +1,22 @@
 # Changelog
 
+## v0.28 - 2026-01-18
+
+### Features
+
+- Decompose nested-pve-setup.yml into granular playbooks (#49)
+  - `nested-pve-network.yml`: Configure vmbr0 bridge only
+  - `nested-pve-ssh.yml`: Copy SSH keys for nested VM access
+  - `nested-pve-repos.yml`: Sync repos and configure PVE
+  - Enables phase-level control in iac-driver scenarios
+  - Original `nested-pve-setup.yml` remains for backward compatibility
+
+### Fixed
+
+- Add `| bool` filter to copy-files.yml conditionals for CLI extra-vars compatibility
+  - Fixes "Conditional result derived from value of type 'str'" error
+  - Ansible CLI `-e` passes booleans as strings, filter ensures proper handling
+
 ## v0.26 - 2026-01-17
 
 - Release alignment with homestak v0.26
