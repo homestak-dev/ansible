@@ -12,8 +12,9 @@
 
 - name: Install common packages
   ansible.builtin.apt:
-    name: "{{ common_packages }}"
+    name: "{{ packages | default([]) }}"
     state: present
+  when: packages is defined and packages | length > 0
 
 - name: Install extra packages for environment
   ansible.builtin.apt:
