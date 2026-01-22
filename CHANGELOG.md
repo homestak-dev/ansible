@@ -1,5 +1,13 @@
 # Changelog
 
+## Unreleased
+
+### Fixed
+- Fix base role to use `packages` variable from ConfigResolver
+  - Changed from `common_packages` to `packages` variable name
+  - Added conditional to skip when packages list is empty
+  - Aligns with site-config resolved ansible vars
+
 ## v0.28 - 2026-01-18
 
 ### Features
