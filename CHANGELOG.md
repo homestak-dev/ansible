@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## v0.39 - 2026-01-22
+
 ### Fixed
 - Fix base role to use `packages` variable from ConfigResolver
   - Changed from `common_packages` to `packages` variable name
