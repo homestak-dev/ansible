@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+### Fixed
+- Fix nested-pve SSH key copy to include homestak user (iac-driver#133)
+  - Previously only copied to root, causing SSH failures from automation_user
+  - Now copies to both /root/.ssh/ and /home/homestak/.ssh/
+  - Enables iac-driver to SSH as homestak to nested VMs
+
 ## v0.45 - 2026-02-02
 
 - Release alignment with homestak v0.45

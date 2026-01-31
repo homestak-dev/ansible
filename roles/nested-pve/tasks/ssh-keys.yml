@@ -1,20 +1,54 @@
 ---
 # Copy SSH keys to nested PVE for VM access
+# Keys are copied to both root and automation_user (homestak) for:
+# - root: ansible connections
+# - homestak: iac-driver SSH connections to nested VMs
 
-- name: Ensure .ssh directory exists
+- name: Ensure root .ssh directory exists
   ansible.builtin.file:
     path: /root/.ssh
     state: directory
     mode: '0700'
+    owner: root
+    group: root
 
-- name: Copy SSH private key
+- name: Copy SSH private key to root
   ansible.builtin.copy:
     src: ~/.ssh/id_rsa
     dest: /root/.ssh/id_rsa
     mode: '0600'
+    owner: root
+    group: root
 
-- name: Copy SSH public key
+- name: Copy SSH public key to root
   ansible.builtin.copy:
     src: ~/.ssh/id_rsa.pub
     dest: /root/.ssh/id_rsa.pub
     mode: '0644'
+    owner: root
+    group: root
+
+# Also copy to automation_user (homestak) for iac-driver SSH connections
+- name: Ensure homestak .ssh directory exists
+  ansible.builtin.file:
+    path: /home/homestak/.ssh
+    state: directory
+    mode: '0700'
+    owner: homestak
+    group: homestak
+
+- name: Copy SSH private key to homestak
+  ansible.builtin.copy:
+    src: ~/.ssh/id_rsa
+    dest: /home/homestak/.ssh/id_rsa
+    mode: '0600'
+    owner: homestak
+    group: homestak
+
+- name: Copy SSH public key to homestak
+  ansible.builtin.copy:
+    src: ~/.ssh/id_rsa.pub
+    dest: /home/homestak/.ssh/id_rsa.pub
+    mode: '0644'
+    owner: homestak
+    group: homestak
