@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+### Fixed
+- Fix nested-pve role SSH paths for non-root automation user (#34)
+  - Use portable SSH paths (`~/.ssh/`) that work for both root and non-root users
+  - Enables recursive scenarios with `homestak` automation user
+
 ## v0.39 - 2026-01-22
 
 ### Fixed
