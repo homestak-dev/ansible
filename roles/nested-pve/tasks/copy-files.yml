@@ -191,7 +191,7 @@
       packer init "$template"
     done
   args:
-    creates: /root/.config/packer/plugins
+    creates: "{{ ansible_env.HOME }}/.config/packer/plugins"
   when: packer_templates.stat.exists
 
 # ============================================================================
