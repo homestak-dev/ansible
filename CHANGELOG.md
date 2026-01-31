@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## v0.41 - 2026-01-31
+
 ### Fixed
 - Fix nested-pve role SSH paths for non-root automation user (#34)
   - Use portable SSH paths (`~/.ssh/`) that work for both root and non-root users
