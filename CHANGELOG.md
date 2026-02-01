@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## v0.43 - 2026-02-01
+
+- Release alignment with homestak v0.43
+
 ## v0.41 - 2026-01-31
 
 ### Fixed
