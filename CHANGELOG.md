@@ -6,6 +6,10 @@
 
 - Release alignment with homestak v0.43
 
+## v0.42 - 2026-01-31
+
+- Release alignment with homestak v0.42
+
 ## v0.41 - 2026-01-31
 
 ### Fixed
