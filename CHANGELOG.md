@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## v0.45 - 2026-02-02
+
+- Release alignment with homestak v0.45
+
 ## v0.44 - 2026-02-02
 
 - Release alignment with homestak v0.44
