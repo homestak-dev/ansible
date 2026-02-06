@@ -36,7 +36,10 @@
         enabled: false
         state: stopped
       loop: "{{ services_disable | default([]) }}"
-      ignore_errors: true
+      register: _disable_result
+      failed_when:
+        - _disable_result is failed
+        - "'Could not find' not in (_disable_result.msg | default(''))"
 
     - name: Config phase complete
       ansible.builtin.debug:
