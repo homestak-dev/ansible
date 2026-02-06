@@ -1,0 +1,3 @@
+---
+# Default shell for local user
+local_user_shell: /bin/bash
