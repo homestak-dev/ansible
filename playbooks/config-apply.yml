@@ -1,0 +1,43 @@
+---
+# Config phase playbook: apply a specification to the local host.
+#
+# Called by: iac-driver ./run.sh config
+# Variables: passed via -e @/usr/local/etc/homestak/state/config-vars.json
+#
+# Roles applied:
+#   - homestak.debian.base     (packages, timezone)
+#   - homestak.debian.users    (local_user, SSH keys)
+#   - homestak.debian.security (SSH hardening, sudo, fail2ban)
+#
+# Service management is handled in post_tasks for services not
+# covered by existing roles.
+
+- name: Apply specification (config phase)
+  hosts: all
+  connection: local
+  gather_facts: true
+
+  roles:
+    - homestak.debian.base
+    - homestak.debian.users
+    - homestak.debian.security
+
+  post_tasks:
+    - name: Enable services
+      ansible.builtin.systemd:
+        name: "{{ item }}"
+        enabled: true
+        state: started
+      loop: "{{ services_enable | default([]) }}"
+
+    - name: Disable services
+      ansible.builtin.systemd:
+        name: "{{ item }}"
+        enabled: false
+        state: stopped
+      loop: "{{ services_disable | default([]) }}"
+      ignore_errors: true
+
+    - name: Config phase complete
+      ansible.builtin.debug:
+        msg: "Config phase applied to {{ inventory_hostname }}"
