@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Added
+- Add `defaults/main.yml` to users role with `local_user_shell` default (iac-driver#163)
+  - Prevents undefined variable error when config-apply.yml runs in cloud-init environments
+
 ### Fixed
 - Fix nested-pve SSH key copy to include homestak user (iac-driver#133)
   - Previously only copied to root, causing SSH failures from automation_user
