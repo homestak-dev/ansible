@@ -14,7 +14,6 @@
 
 - name: Apply specification (config phase)
   hosts: all
-  connection: local
   gather_facts: true
 
   roles:
