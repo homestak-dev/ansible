@@ -116,7 +116,7 @@ curl -fsSL https://raw.githubusercontent.com/homestak-dev/bootstrap/master/insta
 # After bootstrap, use the 'homestak' command
 homestak pve-setup
 homestak user -e local_user=myuser
-homestak network -e pve_network_tasks='["static"]' -e pve_new_ip=10.0.12.100
+homestak network -e pve_network_tasks='["static"]' -e pve_new_ip=198.51.100.100
 ```
 
 ### Manual (without bootstrap)
@@ -133,7 +133,7 @@ ansible-playbook -i inventory/local.yml playbooks/pve-setup.yml -c local
 Remote controller SSHs to target and runs playbooks:
 ```bash
 ansible-playbook -i inventory/remote-dev.yml playbooks/pve-network.yml \
-  -e ansible_host=10.0.12.62 -e ansible_user=root ...
+  -e ansible_host=198.51.100.62 -e ansible_user=root ...
 ```
 **Limitation**: SSH connection breaks when IP changes.
 
@@ -141,10 +141,10 @@ ansible-playbook -i inventory/remote-dev.yml playbooks/pve-network.yml \
 Controller triggers local execution on target, avoiding SSH issues:
 ```bash
 ansible-playbook -i inventory/remote-dev.yml playbooks/trigger-network.yml \
-  -e ansible_host=10.0.12.62 \
+  -e ansible_host=198.51.100.62 \
   -e pve_network_tasks='["reip","reboot"]' \
-  -e pve_new_ip=10.0.12.100 \
-  -e pve_new_gateway=10.0.12.1
+  -e pve_new_ip=198.51.100.100 \
+  -e pve_new_gateway=198.51.100.1
 ```
 **How it works**:
 1. Pushes vars to target
@@ -157,7 +157,7 @@ Run directly on the PVE host:
 ```bash
 homestak network \
   -e pve_network_tasks='["reip","reboot"]' \
-  -e pve_new_ip=10.0.12.100
+  -e pve_new_ip=198.51.100.100
 ```
 
 ## Configuration Source (v0.13+)
@@ -277,9 +277,9 @@ Nested PVE scenarios require SSH access at multiple levels:
 ```
 Outer Host (father)
     │
-    ├── SSH (outer host key) ──→ Inner PVE (10.0.12.x)
+    ├── SSH (outer host key) ──→ Inner PVE (198.51.100.x)
     │                               │
-    │                               └── SSH (copied key) ──→ Test VM (10.0.12.y)
+    │                               └── SSH (copied key) ──→ Test VM (198.51.100.y)
     │
     └── SSH Jump Chain (-J) ──────────────────────────────→ Test VM
 ```
@@ -304,7 +304,7 @@ Tested successfully on Debian 13 Trixie. Alternative to `homestak.proxmox.instal
 
 ```bash
 ansible-galaxy role install lae.proxmox
-ansible-playbook -i '10.0.12.x,' playbooks/test-lae-proxmox.yml -u root
+ansible-playbook -i '198.51.100.x,' playbooks/test-lae-proxmox.yml -u root
 ```
 
 **Requirements:** Ansible 2.15+ (for `deb822_repository` module)

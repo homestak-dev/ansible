@@ -18,7 +18,7 @@ Install Proxmox VE on a fresh Debian 13 (Trixie) system:
 
 ```bash
 ansible-playbook -i inventory/remote-dev.yml playbooks/pve-install.yml \
-  -e ansible_host=10.0.12.100 \
+  -e ansible_host=198.51.100.100 \
   -e pve_hostname=pve-new
 ```
 
