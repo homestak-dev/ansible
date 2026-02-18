@@ -1,0 +1,71 @@
+---
+# Phase 1: Pre-reboot tasks for PVE installation
+# Configures hostname, repos, and installs Proxmox kernel.
+# After this phase, a reboot is required to load the new kernel.
+
+- name: Verify running on Debian Trixie
+  ansible.builtin.assert:
+    that:
+      - ansible_distribution == "Debian"
+      - ansible_distribution_major_version == "13" or ansible_distribution_release == "trixie"
+    fail_msg: "This playbook requires Debian 13 (Trixie)"
+
+- name: Set hostname
+  ansible.builtin.hostname:
+    name: "{{ pve_hostname }}"
+
+- name: Configure /etc/hosts with static IP
+  ansible.builtin.lineinfile:
+    path: /etc/hosts
+    regexp: "^{{ pve_ip }}\\s+"
+    line: "{{ pve_ip }} {{ pve_hostname }}{% if pve_domain %}.{{ pve_domain }} {{ pve_hostname }}{% endif %}"
+    state: present
+
+- name: Verify hostname resolves to non-loopback IP
+  ansible.builtin.command: hostname --ip-address
+  register: hostname_ip
+  changed_when: false
+  failed_when: hostname_ip.stdout is search('127.0')
+
+- name: Download Proxmox GPG key
+  ansible.builtin.get_url:
+    url: "{{ pve_gpg_key_url }}"
+    dest: /usr/share/keyrings/proxmox-archive-keyring-trixie.gpg
+    mode: '0644'
+    checksum: "{{ pve_gpg_key_checksum }}"
+
+- name: Add Proxmox VE repository
+  ansible.builtin.template:
+    src: pve-install-repo.sources.j2
+    dest: /etc/apt/sources.list.d/pve-install-repo.sources
+    mode: "0644"
+
+- name: Update apt cache
+  ansible.builtin.apt:
+    update_cache: true
+
+- name: Full system upgrade
+  ansible.builtin.apt:
+    upgrade: full
+    autoremove: true
+
+- name: Get root filesystem device
+  ansible.builtin.shell: |
+    set -o pipefail
+    findmnt -n -o SOURCE / | sed 's/[0-9]*$//'
+  args:
+    executable: /bin/bash
+  register: root_device
+  changed_when: false
+
+- name: Pre-configure grub-pc install devices
+  ansible.builtin.debconf:
+    name: grub-pc
+    question: grub-pc/install_devices
+    value: "{{ root_device.stdout }}"
+    vtype: string
+
+- name: Install Proxmox kernel
+  ansible.builtin.apt:
+    name: proxmox-default-kernel
+    state: present

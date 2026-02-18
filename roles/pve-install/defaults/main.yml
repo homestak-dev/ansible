@@ -7,8 +7,8 @@ pve_hostname: "{{ inventory_hostname }}"
 # Domain (optional)
 pve_domain: ""
 
-# Static IP (required - should match ansible_host)
-pve_ip: "{{ ansible_host }}"
+# Static IP (uses real interface IP; falls back to ansible_host for remote)
+pve_ip: "{{ ansible_default_ipv4.address | default(ansible_host) }}"
 
 # PVE repository
 pve_repo_url: "http://download.proxmox.com/debian/pve"

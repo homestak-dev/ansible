@@ -9,6 +9,10 @@
       - pve_network_tasks | length > 0
     fail_msg: "pve_network_tasks must be defined and non-empty"
 
+- name: Run bridge creation tasks
+  ansible.builtin.include_tasks: bridge.yml
+  when: "'bridge' in pve_network_tasks"
+
 - name: Run re-IP tasks
   ansible.builtin.include_tasks: reip.yml
   when: "'reip' in pve_network_tasks"

@@ -1,0 +1,18 @@
+---
+# PVE Install - Phase 2: Packages
+#
+# Installs PVE packages, removes Debian kernel, configures repos.
+# Must run after reboot into Proxmox kernel.
+#
+# For local mode: called by iac-driver scenario after reboot.
+# For remote mode: use pve-install.yml which handles both phases.
+
+- name: "PVE Install Phase 2: Install PVE packages"
+  hosts: proxmox
+  gather_facts: true
+
+  tasks:
+    - name: Include package installation tasks
+      ansible.builtin.include_role:
+        name: homestak.proxmox.install
+        tasks_from: packages.yml
