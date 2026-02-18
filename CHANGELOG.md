@@ -7,6 +7,9 @@
   - Prevents undefined variable error when config-apply.yml runs in cloud-init environments
 
 ### Fixed
+- Fix pve_ip defaulting to 127.0.0.1 during local PVE install (#42)
+  - Use `ansible_default_ipv4.address` instead of `ansible_host` for real IP detection
+  - Falls back to `ansible_host` for remote mode compatibility
 - Fix nested-pve SSH key copy to include homestak user (iac-driver#133)
   - Previously only copied to root, causing SSH failures from automation_user
   - Now copies to both /root/.ssh/ and /home/homestak/.ssh/
