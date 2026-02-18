@@ -1,0 +1,97 @@
+---
+# Phase 2: Post-reboot tasks for PVE installation
+# Installs PVE packages, removes Debian kernel, configures repos.
+# Must run after reboot into Proxmox kernel.
+
+- name: Preseed postfix configuration
+  ansible.builtin.debconf:
+    name: postfix
+    question: postfix/main_mailer_type
+    value: "Local only"
+    vtype: select
+
+- name: Install Proxmox VE packages
+  ansible.builtin.apt:
+    name: "{{ pve_packages }}"
+    state: present
+  environment:
+    DEBIAN_FRONTEND: noninteractive
+
+- name: Remove Debian kernel packages
+  ansible.builtin.apt:
+    name: "{{ debian_kernel_packages }}"
+    state: absent
+    purge: true
+  failed_when: false  # Packages may already be removed
+
+- name: Remove os-prober
+  ansible.builtin.apt:
+    name: os-prober
+    state: absent
+    purge: true
+
+- name: Update grub
+  ansible.builtin.command: update-grub
+  changed_when: true
+
+- name: Remove temporary PVE install repository
+  ansible.builtin.file:
+    path: /etc/apt/sources.list.d/pve-install-repo.sources
+    state: absent
+
+- name: Remove enterprise repository (requires subscription)
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: absent
+  loop:
+    - /etc/apt/sources.list.d/pve-enterprise.sources
+    - /etc/apt/sources.list.d/pve-enterprise.list
+
+- name: Add PVE no-subscription repository
+  ansible.builtin.copy:
+    dest: /etc/apt/sources.list.d/pve-no-subscription.list
+    content: |
+      # Proxmox VE no-subscription repository
+      deb http://download.proxmox.com/debian/pve {{ ansible_distribution_release }} pve-no-subscription
+    mode: "0644"
+
+- name: Fix cloud-init mirror sources (Debian 13)
+  when: ansible_distribution_release == 'trixie'
+  block:
+    - name: Check for cloud-init mirror-style sources
+      ansible.builtin.stat:
+        path: /etc/apt/mirrors/debian.list
+      register: cloud_init_mirrors
+
+    - name: Replace cloud-init sources with direct URLs
+      ansible.builtin.copy:
+        dest: /etc/apt/sources.list.d/debian.sources
+        content: |
+          Types: deb
+          URIs: https://deb.debian.org/debian
+          Suites: trixie trixie-updates trixie-backports
+          Components: main non-free-firmware
+          Signed-By: /usr/share/keyrings/debian-archive-keyring.gpg
+
+          Types: deb
+          URIs: https://security.debian.org/debian-security
+          Suites: trixie-security
+          Components: main non-free-firmware
+          Signed-By: /usr/share/keyrings/debian-archive-keyring.gpg
+        mode: "0644"
+      when: cloud_init_mirrors.stat.exists
+
+- name: Update apt cache with new repositories
+  ansible.builtin.apt:
+    update_cache: true
+
+- name: Display completion message
+  ansible.builtin.debug:
+    msg: |
+      Proxmox VE installation complete!
+      Access web interface at: https://{{ pve_ip }}:8006
+
+      Next steps:
+      1. Create Linux Bridge vmbr0 for VM networking
+      2. Configure storage as needed
+      3. Run pve-setup.yml for post-install configuration

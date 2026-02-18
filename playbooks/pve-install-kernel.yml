@@ -1,0 +1,18 @@
+---
+# PVE Install - Phase 1: Kernel
+#
+# Configures hostname, repos, and installs Proxmox kernel.
+# After this playbook, a reboot is required to load the new kernel.
+#
+# For local mode: iac-driver scenario manages the reboot.
+# For remote mode: use pve-install.yml which handles reboot internally.
+
+- name: "PVE Install Phase 1: Install Proxmox kernel"
+  hosts: proxmox
+  gather_facts: true
+
+  tasks:
+    - name: Include kernel installation tasks
+      ansible.builtin.include_role:
+        name: homestak.proxmox.install
+        tasks_from: kernel.yml

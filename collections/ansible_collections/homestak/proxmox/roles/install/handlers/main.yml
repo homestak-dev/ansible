@@ -1,5 +1,4 @@
 ---
-- name: Reboot for new kernel
-  ansible.builtin.reboot:
-    reboot_timeout: "{{ reboot_timeout }}"
-    msg: "Rebooting to load Proxmox kernel"
+# Handlers for homestak.proxmox.install role
+# Note: Reboot is now handled inline in tasks/main.yml (remote mode)
+# or by the iac-driver scenario (local mode).
