@@ -1,0 +1,143 @@
+---
+# pve-network: bridge creation tasks
+# Creates vmbr0 bridge from primary physical interface
+# For fresh PVE wiki installs where no bridge exists yet
+# Multi-NIC safe: auto-detects primary interface via default route
+
+- name: Check if vmbr0 already exists
+  ansible.builtin.shell: ip link show vmbr0 2>/dev/null
+  register: vmbr0_check
+  failed_when: false
+  changed_when: false
+
+- name: Skip bridge creation if vmbr0 already exists
+  ansible.builtin.debug:
+    msg: "vmbr0 bridge already exists - skipping bridge creation"
+  when: vmbr0_check.rc == 0
+
+- name: Create vmbr0 bridge
+  when: vmbr0_check.rc != 0
+  block:
+    - name: Detect network facts from Ansible gathered facts
+      ansible.builtin.set_fact:
+        bridge_detected_iface: "{{ ansible_default_ipv4.interface | default('') }}"
+        bridge_detected_address: "{{ ansible_default_ipv4.address | default('') }}"
+        bridge_detected_netmask: "{{ ansible_default_ipv4.netmask | default('') }}"
+        bridge_detected_gateway: "{{ ansible_default_ipv4.gateway | default('') }}"
+        bridge_detected_method: "{{ 'static' if ansible_default_ipv4.address | default('') else 'dhcp' }}"
+
+    - name: Fallback interface detection via ip route
+      when: bridge_detected_iface == ''
+      block:
+        - name: Get primary interface from ip route
+          ansible.builtin.shell: |
+            set -o pipefail
+            ip -o route get 8.8.8.8 2>/dev/null | grep -oP 'dev \K\S+'
+          args:
+            executable: /bin/bash
+          register: shell_iface
+          changed_when: false
+          failed_when: false
+
+        - name: Set detected interface from shell
+          ansible.builtin.set_fact:
+            bridge_detected_iface: "{{ shell_iface.stdout | trim }}"
+          when: shell_iface.stdout | trim | length > 0
+
+    - name: Apply overrides from variables
+      ansible.builtin.set_fact:
+        pve_bridge_port: "{{ pve_bridge_port | default(bridge_detected_iface, true) }}"
+        pve_bridge_address: "{{ pve_bridge_address | default(bridge_detected_address, true) }}"
+        pve_bridge_netmask: "{{ pve_bridge_netmask | default(bridge_detected_netmask, true) }}"
+        pve_bridge_gateway: "{{ pve_bridge_gateway | default(bridge_detected_gateway, true) }}"
+
+    - name: Display bridge configuration
+      ansible.builtin.debug:
+        msg: |
+          Bridge port: {{ pve_bridge_port }}
+          Address: {{ pve_bridge_address }}/{{ pve_bridge_netmask }}
+          Gateway: {{ pve_bridge_gateway }}
+
+    - name: Validate bridge detection
+      ansible.builtin.assert:
+        that:
+          - pve_bridge_port | default('', true) | string | length > 0
+          - pve_bridge_port not in ['lo', 'vmbr0']
+        fail_msg: |
+          Cannot detect primary network interface for bridge creation.
+          Please specify manually:
+            pve_bridge_port: eth0
+            pve_bridge_address: 198.51.100.61
+            pve_bridge_netmask: 255.255.255.0
+            pve_bridge_gateway: 198.51.100.1
+
+    - name: Set physical interface to manual (bridge port)
+      ansible.builtin.blockinfile:
+        path: /etc/network/interfaces
+        marker: "# {mark} ANSIBLE MANAGED - {{ pve_bridge_port }}"
+        insertbefore: "^source"
+        block: |
+          auto {{ pve_bridge_port }}
+          iface {{ pve_bridge_port }} inet manual
+        state: present
+
+    - name: Remove old physical interface config (non-managed)
+      ansible.builtin.shell: |
+        python3 << 'PYSCRIPT'
+        iface = "{{ pve_bridge_port }}"
+        with open('/etc/network/interfaces', 'r') as f:
+            lines = f.read().split('\n')
+        result = []
+        skip_indented = False
+        in_ansible = False
+        for line in lines:
+            if '# BEGIN ANSIBLE MANAGED' in line:
+                in_ansible = True
+            if '# END ANSIBLE MANAGED' in line:
+                in_ansible = False
+                result.append(line)
+                continue
+            if in_ansible:
+                result.append(line)
+                continue
+            if skip_indented:
+                if line.startswith(('\t', ' ')) or line == '':
+                    continue
+                skip_indented = False
+            if line.strip() == f'auto {iface}':
+                continue
+            if line.startswith(f'iface {iface} '):
+                skip_indented = True
+                continue
+            result.append(line)
+        with open('/etc/network/interfaces', 'w') as f:
+            f.write('\n'.join(result))
+        PYSCRIPT
+      args:
+        executable: /bin/bash
+      changed_when: true
+
+    - name: Configure vmbr0 bridge with current IP config
+      ansible.builtin.blockinfile:
+        path: /etc/network/interfaces
+        marker: "# {mark} ANSIBLE MANAGED - {{ pve_network_interface }}"
+        insertbefore: "^source"
+        block: |
+          auto {{ pve_network_interface }}
+          {% if pve_bridge_address | default('', true) | length > 0 %}
+          iface {{ pve_network_interface }} inet static
+          	address {{ pve_bridge_address }}
+          	netmask {{ pve_bridge_netmask }}
+          	gateway {{ pve_bridge_gateway }}
+          {% else %}
+          iface {{ pve_network_interface }} inet dhcp
+          {% endif %}
+          	bridge-ports {{ pve_bridge_port }}
+          	bridge-stp off
+          	bridge-fd 0
+        state: present
+
+    - name: Apply network configuration
+      ansible.builtin.shell: |
+        ifreload -a || systemctl restart networking
+      changed_when: true

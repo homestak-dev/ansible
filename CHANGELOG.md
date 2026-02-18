@@ -3,6 +3,10 @@
 ## Unreleased
 
 ### Added
+- Add bridge creation task to networking role for fresh PVE installs (#43)
+  - Auto-detects primary interface, creates vmbr0, moves IP config
+  - Idempotent — skips if vmbr0 already exists
+  - Activated via `pve_network_tasks: ["bridge"]`
 - Add `defaults/main.yml` to users role with `local_user_shell` default (iac-driver#163)
   - Prevents undefined variable error when config-apply.yml runs in cloud-init environments
 

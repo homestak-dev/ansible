@@ -5,8 +5,14 @@
 # to target only the specified interface.
 
 # Task selection - list of tasks to run
-# Options: reip, rename, dhcp, static, ipv6, reboot
+# Options: bridge, reip, rename, dhcp, static, ipv6, reboot
 pve_network_tasks: []
+
+# Bridge creation variables (auto-detected from primary interface)
+# pve_bridge_port: ""       # Physical interface (default: ansible_default_ipv4.interface)
+# pve_bridge_address: ""    # IP address (default: from physical interface)
+# pve_bridge_netmask: ""    # Netmask (default: from physical interface)
+# pve_bridge_gateway: ""    # Gateway (default: from default route)
 
 # Re-IP variables
 pve_new_ip: ""
