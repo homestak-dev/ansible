@@ -14,6 +14,12 @@
   ansible.builtin.hostname:
     name: "{{ pve_hostname }}"
 
+- name: Remove loopback mapping for hostname (PVE requires real IP)
+  ansible.builtin.lineinfile:
+    path: /etc/hosts
+    regexp: "^127\\.0\\.1\\.1\\s+.*{{ pve_hostname }}.*"
+    state: absent
+
 - name: Configure /etc/hosts with static IP
   ansible.builtin.lineinfile:
     path: /etc/hosts
