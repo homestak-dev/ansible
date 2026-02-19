@@ -20,11 +20,11 @@
   block:
     - name: Detect network facts from Ansible gathered facts
       ansible.builtin.set_fact:
-        bridge_detected_iface: "{{ ansible_default_ipv4.interface | default('') }}"
-        bridge_detected_address: "{{ ansible_default_ipv4.address | default('') }}"
-        bridge_detected_netmask: "{{ ansible_default_ipv4.netmask | default('') }}"
-        bridge_detected_gateway: "{{ ansible_default_ipv4.gateway | default('') }}"
-        bridge_detected_method: "{{ 'static' if ansible_default_ipv4.address | default('') else 'dhcp' }}"
+        bridge_detected_iface: "{{ ansible_facts['default_ipv4'].interface | default('') }}"
+        bridge_detected_address: "{{ ansible_facts['default_ipv4'].address | default('') }}"
+        bridge_detected_netmask: "{{ ansible_facts['default_ipv4'].netmask | default('') }}"
+        bridge_detected_gateway: "{{ ansible_facts['default_ipv4'].gateway | default('') }}"
+        bridge_detected_method: "{{ 'static' if ansible_facts['default_ipv4'].address | default('') else 'dhcp' }}"
 
     - name: Fallback interface detection via ip route
       when: bridge_detected_iface == ''
