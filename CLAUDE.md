@@ -236,13 +236,19 @@ Part of the [homestak-dev](https://github.com/homestak-dev) organization:
 ## Playbook Details
 
 ### pve-install.yml
-Installs Proxmox VE on Debian 13 Trixie following the official wiki guide:
-1. Configures hostname and /etc/hosts
+Installs Proxmox VE on Debian 13 Trixie following the official wiki guide. Split into two idempotent phases for local-mode reboot handling (#222):
+
+**Phase 1 (kernel.yml):**
+1. Configures hostname and /etc/hosts (removes 127.0.1.1 loopback mapping)
 2. Adds Proxmox repository (no-subscription)
 3. Installs Proxmox kernel and reboots
+
+**Phase 2 (packages.yml):**
 4. Installs PVE packages (proxmox-ve, postfix, open-iscsi, chrony)
 5. Removes Debian kernel packages
 6. Cleans up temporary repo config
+
+The split enables idempotent re-entry after reboot — if the kernel is already installed (detected via dpkg state), phase 1 is skipped and execution continues with phase 2.
 
 **Requirements:**
 - Fresh Debian 13 (Trixie) installation
@@ -254,6 +260,7 @@ Post-install configuration for existing PVE hosts:
 - Base system packages
 - SSH hardening (environment-specific)
 - Proxmox repo configuration
+- Bridge creation for fresh PVE installs (auto-detects primary interface, creates vmbr0)
 
 ### user.yml
 Creates non-privileged sudoer user (local_user variable).

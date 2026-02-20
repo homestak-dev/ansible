@@ -10,6 +10,15 @@
 - Add `defaults/main.yml` to users role with `local_user_shell` default (iac-driver#163)
   - Prevents undefined variable error when config-apply.yml runs in cloud-init environments
 
+### Changed
+- Split PVE install into kernel and packages phases for idempotent re-entry (#222)
+  - Kernel phase installs proxmox kernel and reboots
+  - Packages phase installs PVE packages (skips if already done)
+  - Enables local-mode install to survive reboot and resume
+- Remove loopback hostname mapping from `/etc/hosts` before PVE install (#47)
+  - Standard Debian maps hostname to 127.0.1.1, which PVE wiki says must be removed
+- Update `ansible_default_ipv4` to `ansible_facts['default_ipv4']` for ansible-core 2.20+ (#47)
+
 ### Fixed
 - Fix pve_ip defaulting to 127.0.0.1 during local PVE install (#42)
   - Use `ansible_default_ipv4.address` instead of `ansible_host` for real IP detection
