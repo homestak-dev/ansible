@@ -10,7 +10,6 @@ Proxmox VE installation and configuration roles.
 | `configure` | PVE config (repos, subscription nag removal) |
 | `networking` | Re-IP, rename, DHCP/static, IPv6, vmbr0 bridges |
 | `api_token` | Create pveum API token for tofu |
-| `nested` | E2E testing: bridge setup, SSH keys, file sync |
 
 ## Usage
 
@@ -47,7 +46,7 @@ Proxmox VE installation and configuration roles.
 
 ### api_token role
 
-Creates `root@pam!tofu` API token for OpenTofu/Terraform automation.
+Creates `root@pam!tofu` API token for OpenTofu automation.
 
 ## Dependencies
 

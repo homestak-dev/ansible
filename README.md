@@ -60,7 +60,7 @@ collections/
             └── roles/
                 ├── install/      # Install PVE on Debian
                 ├── configure/    # Subscription nag, repos
-                ├── networking/   # Re-IP, rename, bridges
+                ├── networking/   # Bridge creation, re-IP, rename, DHCP/static
                 └── api_token/    # pveum API token
 roles/
 └── nested-pve/           # Integration testing (not in collections)
