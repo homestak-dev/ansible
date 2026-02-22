@@ -40,7 +40,7 @@ ansible/
 │               └── roles/
 │                   ├── install/      # Install PVE on Debian 13
 │                   ├── configure/    # PVE config (repos, nag removal)
-│                   ├── networking/   # Re-IP, rename, DHCP/static, IPv6
+│                   ├── networking/   # Bridge creation, re-IP, rename, DHCP/static, IPv6
 │                   └── api_token/    # Create pveum API token
 ├── inventory/
 │   ├── local.yml         # Local execution (ansible_connection: local)
@@ -73,7 +73,7 @@ Debian-generic roles that work on any Debian host (with or without Proxmox):
 | Role | Purpose |
 |------|---------|
 | `base` | System packages, timezone, locale |
-| `users` | Create local_user with sudo |
+| `users` | Create local_user with sudo (default shell: `/bin/bash` via `local_user_shell`) |
 | `security` | SSH hardening, fail2ban (prod) |
 | `iac_tools` | Install packer and tofu from official repos |
 
@@ -85,7 +85,7 @@ PVE-specific roles (depend on `homestak.debian`):
 |------|---------|
 | `install` | Install PVE on Debian 13 Trixie |
 | `configure` | PVE config (repos, subscription nag removal) |
-| `networking` | Re-IP, rename, DHCP/static, IPv6, vmbr0 |
+| `networking` | Bridge creation, re-IP, rename, DHCP/static, IPv6 |
 | `api_token` | Create pveum API token for tofu |
 
 ### Local Roles (not in collections)
@@ -116,13 +116,12 @@ curl -fsSL https://raw.githubusercontent.com/homestak-dev/bootstrap/master/insta
 # After bootstrap, use the 'homestak' command
 homestak pve-setup
 homestak user -e local_user=myuser
-homestak network -e pve_network_tasks='["static"]' -e pve_new_ip=198.51.100.100
 ```
 
 ### Manual (without bootstrap)
 ```bash
-git clone https://github.com/homestak-dev/ansible.git /opt/ansible
-cd /opt/ansible
+git clone https://github.com/homestak-dev/ansible.git /usr/local/lib/homestak/ansible
+cd /usr/local/lib/homestak/ansible
 apt install -y ansible git
 ansible-playbook -i inventory/local.yml playbooks/pve-setup.yml -c local
 ```
@@ -155,7 +154,7 @@ ansible-playbook -i inventory/remote-dev.yml playbooks/trigger-network.yml \
 ### Local Model (on-host)
 Run directly on the PVE host:
 ```bash
-homestak network \
+ansible-playbook -i inventory/local.yml playbooks/pve-network.yml \
   -e pve_network_tasks='["reip","reboot"]' \
   -e pve_new_ip=198.51.100.100
 ```
@@ -182,8 +181,35 @@ When run standalone, `group_vars/all.yml` provides safe fallback defaults.
 | `fail2ban_enabled` | false | Enable fail2ban (true for prod posture) |
 | `pve_remove_subscription_nag` | true | Remove PVE subscription popup |
 | `local_user` | (none) | Non-root user to create (pass via -e) |
+| `local_user_shell` | /bin/bash | Shell for local_user (users role default) |
 | `ansible_host` | - | Required for remote inventories |
 | `pve_hostname` | - | Required for pve-install playbook |
+
+## Networking Role Tasks
+
+The `homestak.proxmox.networking` role dispatches tasks based on the `pve_network_tasks` list variable:
+
+| Task | Description |
+|------|-------------|
+| `bridge` | Create vmbr0 bridge from primary physical interface (auto-detects interface, address, gateway; idempotent - skips if vmbr0 exists) |
+| `reip` | Change static IP address |
+| `rename` | Change hostname and FQDN |
+| `dhcp` | Convert interface to DHCP |
+| `static` | Convert interface to static IP |
+| `ipv6` | Enable/disable IPv6 |
+| `reboot` | Reboot and wait for reconnection |
+
+```bash
+# Create vmbr0 on fresh PVE install
+ansible-playbook -i inventory/local.yml playbooks/pve-network.yml \
+  -e pve_network_tasks='["bridge"]'
+
+# Bridge with manual overrides
+ansible-playbook -i inventory/local.yml playbooks/pve-network.yml \
+  -e pve_network_tasks='["bridge"]' \
+  -e pve_bridge_port=eno1 -e pve_bridge_address=198.51.100.61 \
+  -e pve_bridge_netmask=255.255.255.0 -e pve_bridge_gateway=198.51.100.1
+```
 
 ## Boolean Variables with CLI Extra-Vars
 
@@ -265,7 +291,7 @@ The `nested-pve` role (in `roles/`, not collections) configures inner PVE instan
 | Task File | Purpose |
 |-----------|---------|
 | `network.yml` | Configure vmbr0 bridge for VM networking |
-| `ssh-keys.yml` | Copy SSH private key for inner PVE → test VM access |
+| `ssh-keys.yml` | Copy SSH keys to both root and homestak user for inner PVE → test VM access |
 | `copy-files.yml` | Sync homestak repos, create API token, inject outer host key |
 
 Dependencies: `homestak.debian.iac_tools`, `homestak.proxmox.api_token`
@@ -285,13 +311,14 @@ Outer Host (father)
 ```
 
 **Key injection (copy-files.yml):**
-1. `ssh-keys.yml` copies outer host's private key to inner PVE (`~/.ssh/id_rsa`)
+1. `ssh-keys.yml` copies outer host's private key to inner PVE for both `root` (`/root/.ssh/id_rsa`) and `homestak` (`/home/homestak/.ssh/id_rsa`) users
 2. `copy-files.yml` reads outer host's public key and injects it into inner PVE's `site-config/secrets.yaml` as `ssh_keys.outer_host`
 3. When test VM is created, ConfigResolver includes this key in cloud-init
 4. SSH jump chain (`ssh -J inner_pve test_vm`) now works because outer host's key is authorized on test VM
 
-This enables both:
-- Direct SSH: outer → inner (for ansible)
+This enables:
+- Direct SSH as root: outer → inner (for ansible)
+- Direct SSH as homestak: outer → inner (for iac-driver)
 - Jump chain: outer → inner → test (for verification)
 
 See `../iac-driver/CLAUDE.md` for nested PVE scenario details and architecture.
