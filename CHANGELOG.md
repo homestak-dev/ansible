@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## v0.50 - 2026-02-22
+
 ### Added
 - Add bridge creation task to networking role for fresh PVE installs (#43)
   - Auto-detects primary interface, creates vmbr0, moves IP config
