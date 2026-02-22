@@ -308,7 +308,7 @@ Dependencies: `homestak.debian.iac_tools`, `homestak.proxmox.api_token`
 Tiered PVE deployments require SSH access at multiple levels:
 
 ```
-Parent Node (father)
+Parent Node (srv1)
     │
     ├── SSH (parent node's key) ──→ Child PVE (198.51.100.x)
     │                                  │
