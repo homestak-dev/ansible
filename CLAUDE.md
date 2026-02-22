@@ -55,10 +55,10 @@ ansible/
 │   ├── pve-network.yml   # Network config (re-IP, rename, IPv6)
 │   ├── trigger-network.yml # Push-triggers-pull for network changes
 │   ├── pve-iac-setup.yml # Install IaC tools (packer, tofu)
-│   ├── nested-pve-setup.yml  # Configure inner PVE for nested deployment
+│   ├── nested-pve-setup.yml  # Configure delegated PVE node for tiered deployment
 │   └── user.yml          # User management only
 └── roles/
-    ├── nested-pve/       # Nested PVE configuration (not in collections)
+    ├── nested-pve/       # Tiered PVE configuration (not in collections)
     └── ...               # Legacy roles (deprecated, use collections)
 ```
 
@@ -92,7 +92,7 @@ PVE-specific roles (depend on `homestak.debian`):
 
 | Role | Purpose |
 |------|---------|
-| `nested-pve` | Nested PVE configuration: bridge, SSH keys, copy files |
+| `nested-pve` | Tiered PVE configuration: bridge, SSH keys, copy files |
 
 ### Role References (FQCN)
 
@@ -284,44 +284,44 @@ Post-install configuration for existing PVE hosts:
 ### user.yml
 Creates non-privileged sudoer user (local_user variable).
 
-## Nested PVE Deployments
+## Tiered PVE Deployments
 
-The `nested-pve` role (in `roles/`, not collections) configures inner PVE instances:
+The `nested-pve` role (in `roles/`, not collections) configures delegated PVE nodes:
 
 | Task File | Purpose |
 |-----------|---------|
 | `network.yml` | Configure vmbr0 bridge for VM networking |
-| `ssh-keys.yml` | Copy SSH keys to both root and homestak user for inner PVE → test VM access |
-| `copy-files.yml` | Sync homestak repos, create API token, inject outer host key |
+| `ssh-keys.yml` | Copy SSH keys to both root and homestak user for child PVE → test VM access |
+| `copy-files.yml` | Sync homestak repos, create API token, inject parent node's key |
 
 Dependencies: `homestak.debian.iac_tools`, `homestak.proxmox.api_token`
 
 ### SSH Key Flow
 
-Nested PVE scenarios require SSH access at multiple levels:
+Tiered PVE deployments require SSH access at multiple levels:
 
 ```
-Outer Host (father)
+Parent Node (father)
     │
-    ├── SSH (outer host key) ──→ Inner PVE (198.51.100.x)
-    │                               │
-    │                               └── SSH (copied key) ──→ Test VM (198.51.100.y)
+    ├── SSH (parent node's key) ──→ Child PVE (198.51.100.x)
+    │                                  │
+    │                                  └── SSH (copied key) ──→ Test VM (198.51.100.y)
     │
-    └── SSH Jump Chain (-J) ──────────────────────────────→ Test VM
+    └── SSH Jump Chain (-J) ───────────────────────────────→ Test VM
 ```
 
 **Key injection (copy-files.yml):**
-1. `ssh-keys.yml` copies outer host's private key to inner PVE for both `root` (`/root/.ssh/id_rsa`) and `homestak` (`/home/homestak/.ssh/id_rsa`) users
-2. `copy-files.yml` reads outer host's public key and injects it into inner PVE's `site-config/secrets.yaml` as `ssh_keys.outer_host`
+1. `ssh-keys.yml` copies parent node's private key to the child PVE node for both `root` (`/root/.ssh/id_rsa`) and `homestak` (`/home/homestak/.ssh/id_rsa`) users
+2. `copy-files.yml` reads parent node's public key and injects it into the child PVE node's `site-config/secrets.yaml` as `ssh_keys.outer_host`
 3. When test VM is created, ConfigResolver includes this key in cloud-init
-4. SSH jump chain (`ssh -J inner_pve test_vm`) now works because outer host's key is authorized on test VM
+4. SSH jump chain (`ssh -J inner_pve test_vm`) now works because parent node's key is authorized on test VM
 
 This enables:
-- Direct SSH as root: outer → inner (for ansible)
-- Direct SSH as homestak: outer → inner (for iac-driver)
-- Jump chain: outer → inner → test (for verification)
+- Direct SSH as root: parent → child (for ansible)
+- Direct SSH as homestak: parent → child (for iac-driver)
+- Jump chain: parent → child → test (for verification)
 
-See `../iac-driver/CLAUDE.md` for nested PVE scenario details and architecture.
+See `../iac-driver/CLAUDE.md` for tiered PVE deployment details and architecture.
 
 ## Community Roles
 
