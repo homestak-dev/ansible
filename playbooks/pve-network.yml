@@ -9,8 +9,8 @@
 #     -e pve_network_tasks='["reip","rename","reboot"]' \
 #     -e pve_new_ip=10.0.12.62 \
 #     -e pve_new_gateway=10.0.12.1 \
-#     -e pve_new_hostname=mother \
-#     -e pve_new_fqdn=mother.core
+#     -e pve_new_hostname=srv2 \
+#     -e pve_new_fqdn=srv2.example
 #
 #   # Disable IPv6 (use JSON for boolean values)
 #   ansible-playbook -i inventory/remote-dev.yml playbooks/pve-network.yml \
