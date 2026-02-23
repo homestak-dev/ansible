@@ -1,19 +1,19 @@
 ---
-# nested-pve defaults
+# child-pve defaults
 
 # Network bridge configuration
 # All values auto-detected from ansible_default_ipv4 facts if not set
 
 # Physical interface to bridge (e.g., eth0, ens18)
-nested_pve_bridge_port: null
+child_pve_bridge_port: null
 
 # Bridge IP mode: 'dhcp' or 'static'
-nested_pve_bridge_mode: dhcp
+child_pve_bridge_mode: dhcp
 
 # Static IP settings (only used if bridge_mode == 'static')
-nested_pve_bridge_address: null
-nested_pve_bridge_netmask: null
-nested_pve_bridge_gateway: null
+child_pve_bridge_address: null
+child_pve_bridge_netmask: null
+child_pve_bridge_gateway: null
 
 # Bootstrap configuration
 # Set bootstrap_use_local: true to sync local repos instead of GitHub clone

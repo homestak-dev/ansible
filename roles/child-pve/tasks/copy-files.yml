@@ -1,5 +1,5 @@
 ---
-# Setup homestak on nested PVE
+# Setup homestak on child PVE
 # Two modes:
 # - Production (bootstrap_use_local: false): Clone repos from GitHub via bootstrap
 # - Dev (bootstrap_use_local: true): Sync local repos via tar/unarchive
@@ -231,11 +231,11 @@
   ansible.builtin.set_fact:
     pve_api_token: "{{ (token_result.stdout | from_json)['full-tokenid'] }}={{ (token_result.stdout | from_json).value }}"
 
-- name: Update secrets.yaml with nested-pve token
+- name: Update secrets.yaml with child-pve token
   ansible.builtin.lineinfile:
     path: /opt/homestak/site-config/secrets.yaml
-    regexp: '^(\s*)nested-pve:.*$'
-    line: '    nested-pve: {{ pve_api_token }}'
+    regexp: '^(\s*)child-pve:.*$'
+    line: '    child-pve: {{ pve_api_token }}'
   when: pve_api_token is defined
 
 # Inject outer host's SSH key for jump chain verification

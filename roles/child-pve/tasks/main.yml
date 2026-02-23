@@ -1,5 +1,5 @@
 ---
-# nested-pve - Setup for nested PVE E2E testing
+# child-pve - Setup child PVE node for tiered deployments
 # Configures vmbr0 bridge, copies SSH keys and IaC files
 
 - name: Include network setup tasks

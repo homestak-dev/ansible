@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+### Changed
+- Rename `nested-pve` role to `child-pve` (#49)
+  - Role directory: `roles/nested-pve/` → `roles/child-pve/`
+  - Variables: `nested_pve_bridge_*` → `child_pve_bridge_*`
+  - Playbooks: `nested-pve-{setup,network,ssh,repos}.yml` → `child-pve-{setup,network,ssh,repos}.yml`
+  - API token key: `nested-pve` → `child-pve` in secrets.yaml
+  - Replace infrastructure addresses with TEST-NET-2 placeholders in examples
+
 ## v0.50 - 2026-02-22
 
 ### Added

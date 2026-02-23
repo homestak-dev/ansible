@@ -55,10 +55,10 @@ ansible/
 │   ├── pve-network.yml   # Network config (re-IP, rename, IPv6)
 │   ├── trigger-network.yml # Push-triggers-pull for network changes
 │   ├── pve-iac-setup.yml # Install IaC tools (packer, tofu)
-│   ├── nested-pve-setup.yml  # Configure delegated PVE node for tiered deployment
+│   ├── child-pve-setup.yml  # Configure delegated PVE node for tiered deployment
 │   └── user.yml          # User management only
 └── roles/
-    ├── nested-pve/       # Tiered PVE configuration (not in collections)
+    ├── child-pve/        # Tiered PVE configuration (not in collections)
     └── ...               # Legacy roles (deprecated, use collections)
 ```
 
@@ -92,7 +92,7 @@ PVE-specific roles (depend on `homestak.debian`):
 
 | Role | Purpose |
 |------|---------|
-| `nested-pve` | Tiered PVE configuration: bridge, SSH keys, copy files |
+| `child-pve` | Tiered PVE configuration: bridge, SSH keys, copy files |
 
 ### Role References (FQCN)
 
@@ -244,7 +244,7 @@ ansible-playbook playbook.yml -e "my_flag=true"
 - Variables that might be set from different sources (group_vars, extra_vars, defaults)
 - Any boolean variable used in conditionals where CLI usage is possible
 
-This pattern was added after discovering the issue in nested-pve role's `copy-files.yml` during v0.28.
+This pattern was added after discovering the issue in child-pve role's `copy-files.yml` during v0.28.
 
 ## Related Projects
 
@@ -293,7 +293,7 @@ Creates non-privileged sudoer user (local_user variable).
 
 ## Tiered PVE Deployments
 
-The `nested-pve` role (in `roles/`, not collections) configures delegated PVE nodes:
+The `child-pve` role (in `roles/`, not collections) configures delegated PVE nodes:
 
 | Task File | Purpose |
 |-----------|---------|

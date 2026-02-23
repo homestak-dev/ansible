@@ -1,20 +1,20 @@
 ---
-# Configure network bridge on nested PVE
+# Configure network bridge on child PVE
 #
 # Creates vmbr0 bridge (required after Debian-to-PVE conversion)
 #
 # Usage:
-#   ansible-playbook -i inventory/remote-dev.yml playbooks/nested-pve-network.yml \
+#   ansible-playbook -i inventory/remote-dev.yml playbooks/child-pve-network.yml \
 #     -e ansible_host=<IP>
 #
 # Variables (all auto-detected if not specified):
-#   nested_pve_bridge_port: eth0
-#   nested_pve_bridge_mode: dhcp  # or 'static'
-#   nested_pve_bridge_address: 10.0.12.x  # if static
-#   nested_pve_bridge_netmask: 255.255.255.0  # if static
-#   nested_pve_bridge_gateway: 10.0.12.1  # if static
+#   child_pve_bridge_port: eth0
+#   child_pve_bridge_mode: dhcp  # or 'static'
+#   child_pve_bridge_address: 198.51.100.x  # if static
+#   child_pve_bridge_netmask: 255.255.255.0  # if static
+#   child_pve_bridge_gateway: 198.51.100.1  # if static
 
-- name: Configure nested PVE networking
+- name: Configure child PVE networking
   hosts: all
   gather_facts: true
   become: true
@@ -27,7 +27,7 @@
   tasks:
     - name: Include network setup tasks
       ansible.builtin.include_role:
-        name: nested-pve
+        name: child-pve
         tasks_from: network.yml
 
   post_tasks:
