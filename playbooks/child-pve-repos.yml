@@ -10,7 +10,7 @@
 #   - Injects outer host SSH key for jump chain
 #
 # Usage:
-#   ansible-playbook -i inventory/remote-dev.yml playbooks/nested-pve-repos.yml \
+#   ansible-playbook -i inventory/remote-dev.yml playbooks/child-pve-repos.yml \
 #     -e ansible_host=<IP>
 #
 # Variables:
@@ -31,7 +31,7 @@
   tasks:
     - name: Include file copy and PVE config tasks
       ansible.builtin.include_role:
-        name: nested-pve
+        name: child-pve
         tasks_from: copy-files.yml
 
   post_tasks:

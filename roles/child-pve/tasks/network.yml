@@ -1,5 +1,5 @@
 ---
-# Network bridge setup for nested PVE
+# Network bridge setup for child PVE
 # Creates vmbr0 bridge (required after Debian-to-PVE conversion)
 
 - name: Check if vmbr0 already exists
@@ -43,11 +43,11 @@
 
     - name: Override with explicit variables if provided
       ansible.builtin.set_fact:
-        bridge_port: "{{ nested_pve_bridge_port | default(detected_iface, true) }}"
-        bridge_mode: "{{ nested_pve_bridge_mode | default('dhcp') }}"
-        bridge_address: "{{ nested_pve_bridge_address | default(detected_address, true) }}"
-        bridge_netmask: "{{ nested_pve_bridge_netmask | default(detected_netmask, true) }}"
-        bridge_gateway: "{{ nested_pve_bridge_gateway | default(detected_gateway, true) }}"
+        bridge_port: "{{ child_pve_bridge_port | default(detected_iface, true) }}"
+        bridge_mode: "{{ child_pve_bridge_mode | default('dhcp') }}"
+        bridge_address: "{{ child_pve_bridge_address | default(detected_address, true) }}"
+        bridge_netmask: "{{ child_pve_bridge_netmask | default(detected_netmask, true) }}"
+        bridge_gateway: "{{ child_pve_bridge_gateway | default(detected_gateway, true) }}"
 
     - name: Display detected network config
       ansible.builtin.debug:
@@ -71,11 +71,11 @@
           Gateway: {{ bridge_gateway }}
 
           Please specify manually:
-            nested_pve_bridge_port: eth0
-            nested_pve_bridge_mode: dhcp  # or 'static'
-            nested_pve_bridge_address: 10.0.12.x  # if static
-            nested_pve_bridge_netmask: 255.255.255.0  # if static
-            nested_pve_bridge_gateway: 10.0.12.1  # if static
+            child_pve_bridge_port: eth0
+            child_pve_bridge_mode: dhcp  # or 'static'
+            child_pve_bridge_address: 198.51.100.x  # if static
+            child_pve_bridge_netmask: 255.255.255.0  # if static
+            child_pve_bridge_gateway: 198.51.100.1  # if static
 
     - name: Create vmbr0 bridge configuration
       ansible.builtin.template:

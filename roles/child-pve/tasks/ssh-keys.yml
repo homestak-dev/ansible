@@ -1,8 +1,8 @@
 ---
-# Copy SSH keys to nested PVE for VM access
+# Copy SSH keys to child PVE for VM access
 # Keys are copied to both root and automation_user (homestak) for:
 # - root: ansible connections
-# - homestak: iac-driver SSH connections to nested VMs
+# - homestak: iac-driver SSH connections to child VMs
 
 - name: Ensure root .ssh directory exists
   ansible.builtin.file:
