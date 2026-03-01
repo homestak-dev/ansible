@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+### Breaking
+
+- **Remove dead `child-pve` role** and 4 associated playbooks (bootstrap#75)
+  - `roles/child-pve/` (9 files), `playbooks/child-pve-{setup,network,repos,ssh}.yml`
+  - PVE lifecycle actions in iac-driver now handle all tiered deployment tasks directly
+
 ## v0.51 - 2026-02-28
 
 ### Changed
