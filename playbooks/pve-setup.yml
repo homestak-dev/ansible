@@ -1,6 +1,7 @@
 ---
 - name: Configure Proxmox PVE host
   hosts: proxmox
+  become: true
   gather_facts: true
 
   pre_tasks:

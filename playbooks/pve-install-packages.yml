@@ -9,6 +9,7 @@
 
 - name: "PVE Install Phase 2: Install PVE packages"
   hosts: proxmox
+  become: true
   gather_facts: true
 
   tasks:

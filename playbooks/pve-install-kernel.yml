@@ -9,6 +9,7 @@
 
 - name: "PVE Install Phase 1: Install Proxmox kernel"
   hosts: proxmox
+  become: true
   gather_facts: true
 
   tasks:

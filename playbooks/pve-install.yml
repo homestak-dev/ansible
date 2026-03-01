@@ -13,6 +13,7 @@
 
 - name: Install Proxmox VE on Debian Trixie
   hosts: proxmox
+  become: true
   gather_facts: true
 
   pre_tasks:

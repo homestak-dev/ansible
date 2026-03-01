@@ -1,6 +1,7 @@
 ---
 - name: Configure local user
   hosts: proxmox
+  become: true
   gather_facts: true
 
   roles:
