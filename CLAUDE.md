@@ -111,8 +111,8 @@ homestak user -e local_user=myuser
 
 ### Manual (without bootstrap)
 ```bash
-git clone https://github.com/homestak-dev/ansible.git /usr/local/lib/homestak/ansible
-cd /usr/local/lib/homestak/ansible
+git clone https://github.com/homestak-dev/ansible.git ~/lib/ansible
+cd ~/lib/ansible
 apt install -y ansible git
 ansible-playbook -i inventory/local.yml playbooks/pve-setup.yml -c local
 ```

@@ -25,7 +25,7 @@
   gather_facts: true
 
   vars:
-    homestak_dir: /opt/homestak
+    homestak_dir: "{{ ansible_env.HOME }}"
     vars_file: /tmp/network-trigger-vars.yml
 
   tasks:
