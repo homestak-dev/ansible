@@ -56,7 +56,7 @@ ansible/
 │   ├── trigger-network.yml # Push-triggers-pull for network changes
 │   ├── pve-iac-setup.yml # Install IaC tools (packer, tofu)
 │   └── user.yml          # User management only
-└── roles/                # Legacy roles (deprecated, use collections)
+└── roles/                # ansible-galaxy installed roles (gitignored)
 ```
 
 ## Collections
