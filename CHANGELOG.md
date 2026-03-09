@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## v0.54 - 2026-03-08
+
 ### Changed
 - Update stale paths for multi-org migration (#62)
   - `site-config` → `config`, `~/lib/` → `~/iac/` in docs and config
