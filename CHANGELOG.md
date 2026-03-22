@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## v0.57 - 2026-03-22
+
 ### Features
 - Configure DNS servers on vmbr0 bridge creation via `pve_dns_servers` variable
 
